@@ -69,7 +69,8 @@ if any factors or character vectors are left in the data.frame, it will return
 a character matrix. On the other side of things, if all columns in the data.frame
 are logical, then it will return a logical matrix. However, if every column in the
 data.frame is logical except for one factor or character vector, then it will
-return a character matrix.
+return a character matrix. (If you have a data.frame where 2 columns are the matrix
+dimnames and one column is the matrix elements, then use \code{d2a()}).
 }
 \examples{
 x <- d2m(mtcars); str(x)

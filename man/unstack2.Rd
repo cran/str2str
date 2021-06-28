@@ -10,6 +10,7 @@ unstack2(
   vrbnames.nm = "vrb_names",
   el.nm = "el",
   keep.nm = pick(x = names(data), val = c(rownames.nm, vrbnames.nm, el.nm), not = TRUE),
+  add.missing = TRUE,
   rownamesAsColumn = FALSE
 )
 }
@@ -31,6 +32,12 @@ The default is all the other columns in the data.frame besides \code{rownames.nm
 \code{vrbnames.nm}, and \code{el.nm}. If NULL, then no additional columns are retained.
 The \code{keep.nm} columns will be the last (aka most right) columns in the return object.}
 
+\item{add.missing}{logical vector of length 1 specifying whether missing values
+should be added when unstacking. This will occur if there are unequal number of
+rows for each variable in the set. If FALSE, an error will be returned when
+there are an unequal number of rows and missing values would need to be added
+to create the returned data.frame.}
+
 \item{rownamesAsColumn}{logical vector of length 1 specifying whether the unique
 values in \code{rownames.nm} column should be a column in the return object (TRUE)
 or the rownames of the return object (FALSE).}
@@ -38,15 +45,15 @@ or the rownames of the return object (FALSE).}
 \value{
 data.frame with nrow = \code{length(unique(data[[rownames.nm]]))} from
 unstacking the elements of \code{el.nm} alongside one another. New columns are
-created for each unique values in \code{vrbnames.nm} as well as columns for any
+created for each unique value in \code{vrbnames.nm} as well as columns for any
 colnames additional specified by \code{keep.nm}. If \code{rownamesAsColumn} = TRUE,
-then the first column are the unique values in \code{rownames.nm}; otherwise,
+then the first column is the unique values in \code{rownames.nm}; otherwise,
 they are the rownames of the return object (default).
 }
 \description{
 \code{unstack2} converts one set of variables in a data.frame from long to wide format.
 (If you want to convert multiple sets of variables from long to wide, see
-\code{reshape}.) It is a modified version of \code{unstack} that 1) requires a
+\code{\link{reshape}}.) It is a modified version of \code{unstack} that 1) requires a
 column for the rownames of the data.frame (or equivalently an id column with
 unique values for each row in the wide format) before it was stacked, 2) can
 retain additional columns not being unstacked, and 3) can order by rownames
@@ -60,6 +67,7 @@ unstacked, and 3) can order by rownames original positions rather than the varia
 names being stacked call order.
 }
 \examples{
+
 # ordered by rownames
 stacked <- stack2(data = mtcars, select.nm = c("disp","hp","drat","wt","qsec"),
    keep.nm = c("vs","am"), order.by.rownames = TRUE)
@@ -69,14 +77,32 @@ stacked <- stack2(data = mtcars, select.nm = c("disp","hp","drat","wt","qsec"),
    keep.nm = c("vs","am"), order.by.rownames = FALSE)
 y <- unstack2(stacked)
 identical(x, y)
+
 # rownames as a column
 z <- unstack2(data = stacked, rownamesAsColumn = TRUE)
-# compare to utils::unstack.data.frame and reshape::cast.data.frame
+
+# compare to utils:::unstack.data.frame and reshape::cast
 stacked <- stack2(data = mtcars, select.nm = c("disp","hp","drat","wt","qsec"),
    keep.nm = c("vs","am"))
-x <- unstack(x = stacked, form = el ~ vrb_names) # not able to keep additional variables
+x <- unstack(x = stacked, form = el ~ vrb_names) # automatically sorts the colnames alphabetically
 y <- reshape::cast(data = stacked, formula = row_names ~ vrb_names,
-   value = "el") # automatically sorts the rownames and does not include extra columns
-z <- unstack2(stacked)
+   value = "el") # automatically sorts the rownames alphabetically
+z <- unstack2(stacked) # is able to keep additional variables
 head(x); head(y); head(z)
+
+# unequal number of rows for each unique value in `data`[[`vrbnames.nm`]]
+# this can occur if you are using unstack2 without having called stack2 right before
+row_keep <- sample(1:nrow(stacked), size = nrow(stacked) / 2)
+stacked_rm <- stacked[row_keep, ]
+unstack2(data = stacked_rm, rownames.nm = "row_names", vrbnames.nm = "vrb_names", el.nm = "el")
+\dontrun{
+   unstack2(data = stacked_rm, rownames.nm = "row_names", vrbnames.nm = "vrb_names",
+      el.nm = "el", add.missing = FALSE)
+}
+
+}
+\seealso{
+\code{\link{stack2}}
+   \code{\link{unstack}}
+   \code{\link[reshape]{cast}}
 }

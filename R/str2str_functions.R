@@ -1,6 +1,6 @@
 # STR2STR ####
 
-#' str2str: Convert R Objects from One Structure to Another.
+#' Structure to Structure
 #'
 #' @description \code{str2str} is a package for converting R objects to different structures.
 #' It focuses on four primary R objects: (atomic) vectors, matrices, data.frames, and
@@ -28,25 +28,30 @@
 #' \code{str2str} package seeks to fill that gap in useability.
 #'
 #' @section Abbreviations:
-#' v = (atomic) vector
-#' m = matrix
-#' d = data.frame
-#' a = (3D+) array
-#' l = list
-#' el = elements
-#' nm = names
-#' uv = unique values
-#' lgl = logical
-#' int = integer
-#' dbl = double
-#' chr = character
-#' fct = factor
-#' lvl = levels
-#' vrb = variable
-#' frm = formula
-#' fun = function
+#' \describe{See the table below:
+#'    \item{v}{(atomic) vector}
+#'    \item{m}{matrix}
+#'    \item{d}{data.frame}
+#'    \item{a}{(3D+) array}
+#'    \item{l}{list}
+#'    \item{el}{elements}
+#'    \item{nm}{names}
+#'    \item{uv}{unique values}
+#'    \item{lgl}{logical}
+#'    \item{int}{integer}
+#'    \item{dbl}{double}
+#'    \item{num}{numeric}
+#'    \item{chr}{character}
+#'    \item{fct}{factor}
+#'    \item{lvl}{levels}
+#'    \item{vrb}{variable}
+#'    \item{frm}{formula}
+#'    \item{fun}{function}
+#'    \item{rtn}{return}
+#'    \item{str}{structure}
+#' }
 #'
-#' @import datasets stats utils
+#' @import datasets stats utils methods
 #'
 #' @docType package
 #'
@@ -353,6 +358,50 @@ not.rownames <- function(x, nm) {
    return(output)
 }
 
+# is.Date
+
+#' Test for a Date object
+#'
+#' \code{is.Date} returns whether an object is a Date object (aka has class = "Date").
+#'
+#' @param x an object.
+#'
+#' @return TRUE is \code{x} has class "Date" and FALSE if \code{x} does not have class "Date".
+#'
+#' @examples
+#' date <- as.Date("2021-05-24", format = "%Y-%m-%d") # as.Date.character
+#' is.Date(date)
+#' class(date) <- append(class(date), "extra_class")
+#' is.Date(date) # classes other than Date are allowed
+#' is.Date(list(date)) # returns FALSE
+#' @export
+is.Date <- function(x) {
+   is(object = x, class2 = "Date") # help(is) says is() is a little faster than inherits()
+}
+
+# is.POSIXct
+
+#' Test for a POSIXct object
+#'
+#' \code{is.POSIXct} returns whether an object is a POSIXct object (aka has class = "POSIXct").
+#'
+#' @param x an object.
+#'
+#' @return TRUE is \code{x} has class "POSIXct" and FALSE if \code{x} does not have class "POSIXct".
+#'
+#' @examples
+#' tmp <- as.POSIXlt("2021-05-24 21:49:11", tz = "America/New_York",
+#'    format = "%Y-%m-%d %H:%M:%OS") # as.POSIXlt.character
+#' time <- as.POSIXct(tmp) # as.POSIXct.POSIXlt
+#' is.POSIXct(time)
+#' class(time) <- append(class(time), "extra_class")
+#' is.POSIXct(time) # classes other than Date are allowed
+#' is.POSIXct(list(time)) # returns FALSE
+#' @export
+is.POSIXct <- function(x) {
+   is(object = x, class2 = "POSIXct") # help(is) says is() is a little faster than inherits()
+}
+
 # all_same #
 
 #' Test if All Elements are the Same
@@ -404,6 +453,43 @@ all_diff <- function(x) {
 }
 
 # ASSIGN ####
+
+# `dimlabels<-` #
+
+#' Add Elements to Vectors
+#'
+#' \code{`dimlabels<-`} adds elements to vectors as a side effect. The purpose of
+#' the function is to replace \code{names(dimnames(x))} with a single function call.
+#'
+#' @param x array or any object with dimnames. The object may or may not already have
+#' dimlabels.
+#'
+#' @param value character vector of dimlabels to be added to \code{x}. If
+#' \code{`dimlabels<-`} is used on its own, then the length of \code{value} must
+#' be the same as ndim. If \code{`dimlabels<-`} is used in confunction with the subsetting
+#' function \code{`[[<-`} or \code{`[<-`}, then the length of \code{values} should
+#' be equal to the length of dimlabels after from the subsetting. This is the same
+#' way \code{`names<-`} works.
+#'
+#' @return Like other similar functions (e.g., \code{`names<-`} and \code{`[<-`}),
+#' it does not appear to have a return object. However, it technically does as a
+#' side effect. The argument \code{x} will have been changed such that \code{value}
+#' has been added as dimlabels. If a traditional return object is desired, and no side
+#' effects, then it can be called like a traditional function:
+#' obj2 <- `dimlabels<-`(x = obj, value = dimlab).
+#'
+#' @examples
+#' a <- array(c(letters, NA), dim = c(3,3,3),
+#'    dimnames = replicate(3, expr = 1:3, simplify = FALSE))
+#' dimlabels(a) <- c("first","second","third")
+#' dimlabels(a)[[2]] <- c("2nd")
+#' dimlabels(a)[c(1,3)] <- c("1st","3rd")
+#' print(a)
+#' @export
+`dimlabels<-` <- function(x, value) {
+   # the last argument has to be named "value" for *<- functions"
+   `attr<-`(x = x, which = "dimnames", value = `names<-`(x = dimnames(x), value = value))
+}
 
 # `append<-` #
 
@@ -529,7 +615,9 @@ all_diff <- function(x) {
 #'
 #' @param value data.frame, matrix, or atomic vector to be added as columns to
 #' \code{data}. If a data.frame or matrix, it must have the same nrow as \code{data}.
-#' If an atomic vector, it must have length equal to nrow of \code{data}.
+#' If an atomic vector, it must have length equal to nrow of \code{data}. Note, if it
+#' is an atomic vector and \code{col.nm} is NULL, then the name of the added column
+#' will be "value".
 #'
 #' @return Like other similar functions (e.g., \code{`names<-`} and \code{`[<-`}),
 #' \code{`cbind<-`} does not appear to have a return object. However, it technically
@@ -578,8 +666,8 @@ all_diff <- function(x) {
    if (after == 0L) output <- cbind(value, data)
    if (after == Ncol) output <- cbind(data, value)
    if (after != 0L && after != Ncol) {
-      data_before <- data[, 1L:after]
-      data_after <- data[, (after + 1L):(Ncol)]
+      data_before <- data[, 1L:after, drop = FALSE]
+      data_after <- data[, (after + 1L):(Ncol), drop = FALSE]
       output <- cbind(data_before, value, data_after)
    }
    return(output)
@@ -682,10 +770,163 @@ all_diff <- function(x) {
    if (after == 0L) output <- rbind(value, data)
    if (after == Nrow) output <- rbind(data, value)
    if (after != 0L && after != Nrow) {
-      data_before <- data[1L:after, ]
-      data_after <- data[(after + 1L):(Nrow), ]
+      data_before <- data[1L:after, , drop = FALSE]
+      data_after <- data[(after + 1L):(Nrow), , drop = FALSE]
       output <- rbind(data_before, value, data_after)
    }
+   return(output)
+}
+
+# `abind<-` #
+
+#' Add array slices to 3D+ Array
+
+#' \code{`abind<-`} adds array slices to arrays as a side effect. It used the function
+#' \code{abind} in the \code{abind} package. The purpose of the function is to replace
+#' the need to use ary2 <- abind(ary1, mat1); ary3 <- rbind(ary2, mat2); ary4 <- rbind(ary3, mat3),
+#' etc. It allows you to specify the dimension you wish to bind \code{along} as well as the dimname you
+#' wish to bind \code{after}. Unlike \code{`cbind<-`}, \code{`rbind<-`}, and \code{`append<-`},
+#' it does not have overwriting functionality (I could not figure out how to code that);
+#' therefore, if \code{value} has some dimnames that are the same as those in \code{a},
+#' it will NOT overwrite them and simply bind them to \code{a}, resulting in duplicate
+#' dimnames.
+#'
+#' Some traditional R folks may find this function uncomfortable. R is famous for limiting
+#' side effects, except for a few notable exceptions (e.g., \code{`[<-`} and \code{`names<-`}).
+#' Part of the reason is that side effects can be computationally inefficient in R.
+#' The entire object often has to be re-constructed and re-saved to memory. For
+#' example, a more computationally efficient alternative to abind(ary) <- mat1;
+#' abind(ary) <- mat2; abind(ary) <- mat3 is ary1 <- do.call(what = abind,
+#' args = list(ary, mat1, mat2, mat3)). However, \code{`abind<-`} was not created
+#' for R programming use when computational efficiency is valued; it is created
+#' for R interactive use when user convenience is valued.
+#'
+#' @param a 3D+ array.
+#'
+#' @param along either an integer vector with length 1 or a character vector of
+#' length 1 specifying the dimension along which to bind \code{value}. If an integer
+#' vector, it is the position of the dimension. If a character vector it is the
+#' dimension with that dimlabel.
+#'
+#' @param after either an integer vector with length 1 or a character vector of
+#' length 1 specifying where to add \code{value} within the dimension specified by
+#' \code{along}. If an integer vector, it is the position within the dimension.
+#' If a character vector it is the dimname within the dimension. Similar to
+#' \code{append}, use 0L if you want the added array slice to be first.
+#'
+#' @param dim.nm character vector of length equal to \code{ndim(value)[along]} that
+#' specifies the dimnames of \code{value} once added to \code{a} as array slices.
+#' This is an optional argument that defaults to NULL where the pre-existing dimnames
+#' of \code{value} are used.
+#'
+#' @param overwrite not currently used, but there are plans to use it in future
+#' versions of the functions. Right now the only option is FALSE.
+#'
+#' @param value matrix or array to be added as slices to \code{a}. Must have ndim
+#' equal to \code{ndim(a)} or \code{ndim(a) - 1L}. Note, the dimensions have to match
+#' those in \code{a}. For example, if \code{value} is a matrix you want to bind
+#' along the third dimension of \code{a}, then \code{dim(value)} must be equal to
+#' \code{dim(a)[1:2]}. If not, you will get an error from \code{abind::abind}.
+#'
+#' @return Like other similar functions (e.g., \code{`names<-`} and \code{`[<-`}),
+#' \code{`rbind<-`} does not appear to have a return object. However, it technically
+#' does as a side effect. The argument \code{data} will have been changed such that
+#' \code{value} has been added as rows. If a traditional return object is desired,
+#' and no side effects, then it can be called like a traditional function:
+#' dat2 <- `rbind<-`(dat1, value = add1).
+#'
+#' @examples
+#' # abind along the last dimension
+#' # default `along` and `after`
+#' HairEyeColor2 <- HairEyeColor
+#' intersex_ary <- array(1:16, dim = c(4,4,1), dimnames = list(NULL, NULL, "Sex" = "Intersex"))
+#' abind(HairEyeColor2) <- intersex_ary
+#' print(HairEyeColor2)
+#' # user-specified `along` and `after`
+#' HairEyeColor2 <- HairEyeColor
+#' intersex_ary <- array(1:16, dim = c(4,4,1), dimnames = list(NULL, NULL, "Sex" = "Intersex"))
+#' abind(HairEyeColor2, along = "Sex", after = 0L) <- intersex_ary
+#' print(HairEyeColor2)
+#' # matrix as `value`
+#' HairEyeColor2 <- HairEyeColor
+#' intersex_mat <- matrix(1:16, nrow = 4, ncol = 4)
+#' abind(HairEyeColor2, dim.nm = "Intersex") <- intersex_mat
+#' print(HairEyeColor2)
+#'
+#' # abind along the first dimension
+#' # array as `value`
+#' HairEyeColor2 <- HairEyeColor
+#' auburn_ary <- array(1:8, dim = c(1,4,2), dimnames = list("Hair" = "Auburn", NULL, NULL))
+#' abind(HairEyeColor2, along = 1L) <- auburn_ary
+#' print(HairEyeColor2)
+#' # matrix as `value`
+#' HairEyeColor2 <- HairEyeColor
+#' auburn_mat <- matrix(1:8, nrow = 4, ncol = 2) # rotate 90-degrees counter-clockwise in your mind
+#' abind(HairEyeColor2, along = 1L, dim.nm = "Auburn") <- auburn_mat
+#' print(HairEyeColor2)
+#' # `after` in the middle
+#' HairEyeColor2 <- HairEyeColor
+#' auburn_mat <- matrix(1:8, nrow = 4, ncol = 2) # rotate 90-degrees counter-clockwise in your mind
+#' abind(HairEyeColor2, along = 1L, after = 2L, dim.nm = "Auburn") <- auburn_mat
+#' print(HairEyeColor2)
+#'
+#' # abind along the second dimension
+#' # array as `value`
+#' HairEyeColor2 <- HairEyeColor
+#' amber_ary <- array(1:8, dim = c(4,1,2), dimnames = list(NULL, "Eye" = "Amber", NULL))
+#' abind(HairEyeColor2, along = 2L) <- amber_ary
+#' print(HairEyeColor2)
+#' # matrix as `value`
+#' HairEyeColor2 <- HairEyeColor
+#' amber_mat <- matrix(1:8, nrow = 4, ncol = 2)
+#' abind(HairEyeColor2, along = 2L, dim.nm = "Amber") <- amber_mat
+#' print(HairEyeColor2)
+#' # `after` in the middle
+#' HairEyeColor2 <- HairEyeColor
+#' amber_mat <- matrix(1:8, nrow = 4, ncol = 2)
+#' abind(HairEyeColor2, along = 2L, after = "Blue", dim.nm = "Amber") <- amber_mat
+#' print(HairEyeColor2)
+#' @export
+`abind<-` <- function(a, along = ndim(a), after = dim(a)[along], dim.nm = NULL,
+   overwrite = FALSE, value) {
+
+   # setup
+   ndim_a <- ndim(a)
+   ndim_value <- ndim(value)
+   if (ndim_value != ndim_a && ndim_value != (ndim_a - 1))
+      stop("`value` must have ndim equal to or one less than `a`")
+   if (is.character(along)) # to allow user to input dimlabel for the `along` argument
+      along <- match(x = along, table = dimlabels(a))
+   dim_along <- dim(a)[along]
+   dimnames_along <- dimnames(a)[along]
+
+   # bind
+   if (is.character(after)) # to allow user to input dimname for the `after` argument
+      after <- match(x = after, table = dimnames(a)[[along]])
+   if (after == 0L) {
+      output <- abind::abind(value, a, along = along, force.array = TRUE,
+         make.names = FALSE, use.first.dimnames = FALSE, use.dnns = TRUE) # use.first.dimnames = FALSE so they are based on `a` and not `value`
+   }
+   if (after == dim_along) {
+      output <- abind::abind(a, value, along = along, force.array = TRUE,
+         make.names = FALSE, use.first.dimnames = TRUE, use.dnns = TRUE)
+   }
+   if (after != 0L && after != dim_along) {
+      # create the call as a string since its unclear how many commas are needed for subsetting
+      ndim_before <- along - 1L
+      ndim_after <- ndim_a - along
+      comma_before <- do.call(what = `paste0`, rep.int(x = list(","), times = ndim_before))
+      comma_after <- do.call(what = `paste0`, rep.int(x = list(","), times = ndim_after))
+      call_before <- paste0("a[", comma_before, " 1L:after", comma_after, ", drop = FALSE]")
+      call_after <- paste0("a[", comma_before, " (after + 1L):(dim_along)",
+         comma_after, ", drop = FALSE]")
+      array_before <- eval(expr = parse(text = call_before))
+      array_after <- eval(expr = parse(text = call_after))
+      output <- abind::abind(array_before, value, array_after, along = along,
+         force.array = TRUE, make.names = FALSE, use.first.dimnames = TRUE, use.dnns = TRUE)
+   }
+   if (ndim_value == (ndim_a - 1) && !(is.null(dim.nm)))
+      dimnames(output)[[along]][after + 1L] <- dim.nm
    return(output)
 }
 
@@ -921,6 +1162,136 @@ undim <- function(x) {
    x_dimnames <- dimnames(x)
    if (1L == length(x_dimnames)) names(rtn) <- x_dimnames[[1]]
    return(rtn)
+}
+
+# undimname #
+
+#' Undimname an Object
+#'
+#' \code{undimname} removes dimnames from an object. This function is to allow
+#' for removing dimnames from only certain dimensions specified by \code{dims}.
+#'
+#' @param x object with dimnames (usually an array of some kind)
+#'
+#' @param dims integer vector of dimension positions or character vector of dimlabels
+#' specifying the dimensions for which dimnames should be removed. Defaults to all dimensions.
+#'
+#' @param rm.dim.lab logical vector of length 1 specifying whether the dimlabels from
+#' the \code{dims} dimensions should be removed and converted to NA.
+#'
+#' @return \code{x} without any dimnames for the dimensions specified by \code{dims}.
+#' If a dimlabel existed for the \code{dims} dimensions, they will have been removed
+#' if \code{rm.dim.lab} = TRUE.
+#'
+#' @examples
+#' # matrix
+#' m <- array(rep.int(NA, times = 4), dim = c(2,2),
+#'    dimnames = list("lower" = c("a","b"),"UPPER" = c("A","B")))
+#' dimnames(m)
+#' m1 <- undimname(m) # remove dimnames from both dimensions
+#' dimnames(m1)
+#' m2 <- undimname(m, rm.dim.lab = FALSE) # keep dimlabels
+#' dimnames(m2)
+#' m3 <- undimname(m, dims = 1) # remove dimnames from only the first dimenion
+#' dimnames(m3)
+#' m4 <- undimname(m, dims = "lower")
+#' dimnames(m4)
+#' all.equal(m3, m4) # same return object
+#' m5 <- undimname(m, dims = 1, rm.dim.lab = FALSE) # keeps dimlabel
+#' dimnames(m5)
+#' # array
+#' a <- unclass(HairEyeColor)
+#' dimnames(a)
+#' a1 <- undimname(a) # removes dimnames from all dimensions
+#' dimnames(a1)
+#' a2 <- undimname(a, rm.dim.lab = FALSE) # keep dimlabels
+#' dimnames(a2)
+#' a3 <- undimname(a, dims = c(1,2)) # remove dimnames from only the first and second dimenions
+#' dimnames(a3)
+#' a4 <- undimname(a, dims = c("Hair","Eye"))
+#' dimnames(a4)
+#' all.equal(a3, a4)
+#' a5 <- undimname(a, dims = c(1,2), rm.dim.lab = FALSE) # keeps dimlabel
+#' dimnames(a5)
+#' @export
+undimname <- function(x, dims = seq_along(dim(x)), rm.dim.lab = TRUE) {
+
+   dim_labels <- dimlabels(x)
+   if (is.character(dims))
+      dims <- match(x = dims, table = dim_labels)
+   dim_along <- seq_along(dim(x))
+   dim_lgl <- is.element(el = dim_along, set = dims)
+   if (all(dim_lgl)) { # for special case of removing dimnames from all dimensions
+      if (rm.dim.lab)
+         return(`dimnames<-`(x = x, value = NULL))
+      else {
+         dim_names <- replicate(n = ndim(x), expr = NULL, simplify = FALSE)
+         names(dim_names) <- dim_labels
+         return(`dimnames<-`(x = x, value = dim_names))
+      }
+   }
+   tmp <- Map(along = dim_along, lgl = dim_lgl, f = function(along, lgl) {
+      if (lgl)
+         return(NULL)
+      else
+         return(dimnames(x)[[along]])
+   })
+   dim_names <- setNames(tmp, nm = dim_labels)
+   if (!(is.null(dim_labels)) && rm.dim.lab) # so that NA dimlabels are not added when there are no dimlabels in `x`
+      names(dim_names)[dim_lgl] <- NA_character_
+   return(`dimnames<-`(x = x, value = dim_names))
+}
+
+# undimlabel #
+
+#' Undimlabel an Object
+#'
+#' \code{undimname} removes dimlabels from an object. This function is to allow
+#' for removing dimlabels from only certain dimensions specified by \code{dims}.
+#'
+#' @param x object with dimlabels (usually an array of some kind)
+#'
+#' @param dims integer vector of dimension positions or character vector of dimlabels
+#' specifying the dimensions for which dimlabels should be removed. Defaults to all dimensions.
+#'
+#' @return \code{x} without any dimlabels for the dimensions specified by \code{dims}.
+#' Consistent with how base R handles removed dimlabels, the removed dimlabels are
+#' converted to NA. If all dimlabels are removed, then the dimlabels are empty (aka NULL).
+#'
+#' @examples
+#' # matrix
+#' m <- array(rep.int(NA, times = 4), dim = c(2,2),
+#'    dimnames = list("lower" = c("a","b"),"UPPER" = c("A","B")))
+#' dimlabels(m)
+#' m2 <- undimlabel(m) # remove dimlabels from both dimensions
+#' dimlabels(m2)
+#' m3 <- undimlabel(m, dims = 1) # remove dimlabels from only the first dimenion
+#' dimlabels(m3)
+#' m4 <- undimlabel(m, dims = "lower")
+#' dimlabels(m4)
+#' all.equal(m3, m4) # same return object
+#' # array
+#' a <- unclass(HairEyeColor)
+#' dimlabels(a)
+#' a2 <- undimlabel(a) # removes dimlabels from all dimensions
+#' dimlabels(a2)
+#' a3 <- undimlabel(a, dims = c(1,2)) # remove dimlabels from only the first and second dimenions
+#' dimlabels(a3)
+#' a4 <- undimlabel(a, dims = c("Hair","Eye"))
+#' dimlabels(a4)
+#' all.equal(a3, a4)
+#' @export
+undimlabel <- function(x, dims = seq_along(dim(x))) {
+
+   dim_labels <- dimlabels(x)
+   if (is.character(dims))
+      dims <- match(x = dims, table = dim_labels)
+   dim_along <- seq_along(dim(x))
+   dim_lgl <- is.element(el = dim_along, set = dims)
+   if (all(dim_lgl)) # for special case of removing all dimlabels so not all NA
+      return(`dimlabels<-`(x = x, value = NULL))
+   dim_labels[dim_lgl] <- NA_character_
+   return(`dimlabels<-`(x, value = dim_labels))
 }
 
 # cat0
@@ -1391,7 +1762,8 @@ order.custom <- function(X, ORD, na.last = FALSE, decreasing = FALSE) {
 #' @param keep.nm optional argument containing a character vector of colnames from
 #' \code{data} specifying the additional columns to be included in the return object.
 #' These columns are repeated down the data.frame as they are not stacked together.
-#' The default is NULL where no additional columns are included in the return object.
+#' The default is the inclusion of all other columns in \code{data} other than
+#' \code{select.nm}. If NULL, then no other columns will be included.
 #'
 #' @param rtn.el.nm character vector of length 1 specifying the name of the column
 #' in the return object that corresponds to the elements of the stacked variables.
@@ -1420,7 +1792,14 @@ order.custom <- function(X, ORD, na.last = FALSE, decreasing = FALSE) {
 #' the stacked elements with name \code{rtn.el.nm}, and the additional columns
 #' are those specified by \code{keep.nm}.
 #'
+#' @seealso
+#'    \code{\link{unstack2}}
+#'    \code{\link{stack}}
+#'    \code{\link[reshape]{melt.data.frame}}
+#'
 #' @examples
+#'
+#' # general
 #' stack2(data = mtcars, select.nm = c("disp","hp","drat","wt","qsec"),
 #'    keep.nm = c("vs","am"))
 #' stack2(data = mtcars, select.nm = c("disp","hp","drat","wt","qsec"),
@@ -1429,9 +1808,18 @@ order.custom <- function(X, ORD, na.last = FALSE, decreasing = FALSE) {
 #' stack2(data = mtcars, select.nm = c("disp","hp","drat","wt","qsec"),
 #'    keep.nm = pick(x = names(mtcars), val = c("disp","hp","drat","wt","qsec"),
 #'    not = TRUE)) # include all columns from `data` in the return object
-#' # compare to utils::stack.data.frame and reshape::melt.data.frame
-#' ChickWeight2 <- ChickWeight
-#' ChickWeight2$"Diet" <- as.integer(ChickWeight$"Diet")
+#'
+#' # keep options
+#' stack2(data = mtcars, select.nm = c("mpg","cyl","disp")
+#'    ) # default = keep all other variables in `data`
+#' stack2(data = mtcars, select.nm = c("mpg","cyl","disp"), keep = c("gear","carb")
+#'    ) # character vector = keep only specified variables in `data`
+#' stack2(data = mtcars, select.nm = c("mpg","cyl","disp"), keep = NULL,
+#'    ) # NULL = keep no other variables in `data`
+#'
+#' # compare to utils:::stack.data.frame and reshape::melt.data.frame
+#' ChickWeight2 <- as.data.frame(datasets::ChickWeight)
+#' ChickWeight2$"Diet" <- as.integer(ChickWeight2$"Diet")
 #' x <- stack(x = ChickWeight2, select = c("weight","Diet")) # does not allow
 #'    # keeping additional columns
 #' y <- reshape::melt(data = ChickWeight2, measure.vars = c("weight","Diet"),
@@ -1441,8 +1829,8 @@ order.custom <- function(X, ORD, na.last = FALSE, decreasing = FALSE) {
 #'    keep.nm = c("Chick","Time"))
 #' head(x); head(y); head(z)
 #' @export
-stack2 <- function(data, select.nm, keep.nm = NULL, rtn.el.nm = "el",
-   rtn.vrbnames.nm = "vrb_names", rtn.rownames.nm = "row_names",
+stack2 <- function(data, select.nm, keep.nm = pick(x = names(data), val = select.nm, not = TRUE),
+   rtn.el.nm = "el", rtn.vrbnames.nm = "vrb_names", rtn.rownames.nm = "row_names",
    order.by.rownames = TRUE, stringsAsFactors = FALSE) {
 
    # stacked columns
@@ -1456,7 +1844,7 @@ stack2 <- function(data, select.nm, keep.nm = NULL, rtn.el.nm = "el",
       tmp_keep <- replicate(n = n_select, expr = data[, keep.nm, drop = FALSE],
          simplify = FALSE)
       keep_dfm <- do.call(what = `rbind.data.frame`, args = tmp_keep) # rbind.data.frame
-   }
+   } else keep_dfm <- data.frame(row.names = 1:nrow(stacked))
 
    # rownames
    row_names <- row.names(data)
@@ -1489,7 +1877,7 @@ stack2 <- function(data, select.nm, keep.nm = NULL, rtn.el.nm = "el",
 #'
 #' \code{unstack2} converts one set of variables in a data.frame from long to wide format.
 #' (If you want to convert multiple sets of variables from long to wide, see
-#' \code{reshape}.) It is a modified version of \code{unstack} that 1) requires a
+#' \code{\link{reshape}}.) It is a modified version of \code{unstack} that 1) requires a
 #' column for the rownames of the data.frame (or equivalently an id column with
 #' unique values for each row in the wide format) before it was stacked, 2) can
 #' retain additional columns not being unstacked, and 3) can order by rownames
@@ -1518,18 +1906,30 @@ stack2 <- function(data, select.nm, keep.nm = NULL, rtn.el.nm = "el",
 #' \code{vrbnames.nm}, and \code{el.nm}. If NULL, then no additional columns are retained.
 #' The \code{keep.nm} columns will be the last (aka most right) columns in the return object.
 #'
+#' @param add.missing logical vector of length 1 specifying whether missing values
+#' should be added when unstacking. This will occur if there are unequal number of
+#' rows for each variable in the set. If FALSE, an error will be returned when
+#' there are an unequal number of rows and missing values would need to be added
+#' to create the returned data.frame.
+#'
 #' @param rownamesAsColumn logical vector of length 1 specifying whether the unique
 #' values in \code{rownames.nm} column should be a column in the return object (TRUE)
 #' or the rownames of the return object (FALSE).
 #'
 #' @return data.frame with nrow = \code{length(unique(data[[rownames.nm]]))} from
 #' unstacking the elements of \code{el.nm} alongside one another. New columns are
-#' created for each unique values in \code{vrbnames.nm} as well as columns for any
+#' created for each unique value in \code{vrbnames.nm} as well as columns for any
 #' colnames additional specified by \code{keep.nm}. If \code{rownamesAsColumn} = TRUE,
-#' then the first column are the unique values in \code{rownames.nm}; otherwise,
+#' then the first column is the unique values in \code{rownames.nm}; otherwise,
 #' they are the rownames of the return object (default).
 #'
+#' @seealso
+#'    \code{\link{stack2}}
+#'    \code{\link{unstack}}
+#'    \code{\link[reshape]{cast}}
+#'
 #' @examples
+#'
 #' # ordered by rownames
 #' stacked <- stack2(data = mtcars, select.nm = c("disp","hp","drat","wt","qsec"),
 #'    keep.nm = c("vs","am"), order.by.rownames = TRUE)
@@ -1539,38 +1939,438 @@ stack2 <- function(data, select.nm, keep.nm = NULL, rtn.el.nm = "el",
 #'    keep.nm = c("vs","am"), order.by.rownames = FALSE)
 #' y <- unstack2(stacked)
 #' identical(x, y)
+#'
 #' # rownames as a column
 #' z <- unstack2(data = stacked, rownamesAsColumn = TRUE)
-#' # compare to utils::unstack.data.frame and reshape::cast.data.frame
+#'
+#' # compare to utils:::unstack.data.frame and reshape::cast
 #' stacked <- stack2(data = mtcars, select.nm = c("disp","hp","drat","wt","qsec"),
 #'    keep.nm = c("vs","am"))
-#' x <- unstack(x = stacked, form = el ~ vrb_names) # not able to keep additional variables
+#' x <- unstack(x = stacked, form = el ~ vrb_names) # automatically sorts the colnames alphabetically
 #' y <- reshape::cast(data = stacked, formula = row_names ~ vrb_names,
-#'    value = "el") # automatically sorts the rownames and does not include extra columns
-#' z <- unstack2(stacked)
+#'    value = "el") # automatically sorts the rownames alphabetically
+#' z <- unstack2(stacked) # is able to keep additional variables
 #' head(x); head(y); head(z)
+#'
+#' # unequal number of rows for each unique value in `data`[[`vrbnames.nm`]]
+#' # this can occur if you are using unstack2 without having called stack2 right before
+#' row_keep <- sample(1:nrow(stacked), size = nrow(stacked) / 2)
+#' stacked_rm <- stacked[row_keep, ]
+#' unstack2(data = stacked_rm, rownames.nm = "row_names", vrbnames.nm = "vrb_names", el.nm = "el")
+#' \dontrun{
+#'    unstack2(data = stacked_rm, rownames.nm = "row_names", vrbnames.nm = "vrb_names",
+#'       el.nm = "el", add.missing = FALSE)
+#' }
+#'
 #' @export
 unstack2 <- function(data, rownames.nm = "row_names", vrbnames.nm = "vrb_names", el.nm = "el",
    keep.nm = pick(x = names(data), val = c(rownames.nm, vrbnames.nm, el.nm), not = TRUE),
-   rownamesAsColumn = FALSE) {
+   add.missing = TRUE, rownamesAsColumn = FALSE) {
 
-   form <- reformulate(termlabels = vrbnames.nm, response = el.nm)
-   unstacked <- unstack(x = data, form = form) # unstack.data.frame
+   if (!add.missing) {
+      nrow_by <- lapply(split(x = data, f = data[[vrbnames.nm]]), FUN = nrow)
+      if(!(all_same(nrow_by)))
+         stop("When `add.missing` = FALSE, data` must have the same number of rows ",
+         "for unique value in `data`[[`vrbnames.nm`]]")
+   }
+   frm <- reformulate(termlabels = vrbnames.nm, response = rownames.nm)
+   tmp <- reshape::cast(data = data, formula = frm, value = el.nm)
+   # switch the row and col orders back to based on unique rather than alphabetical
+   rownames_unique <- unique(data[[rownames.nm]])
+   vrbnames_unique <- unique(data[[vrbnames.nm]])
+   order_custom <- order.custom(X = tmp[[rownames.nm]], ORD = rownames_unique)
+   unstacked <- tmp[order_custom, vrbnames_unique]
    row_vrb <- data[c(vrbnames.nm, rownames.nm)]
    row_vrb_unique <- lapply(X = row_vrb, FUN = unique)
    if (!(is.null(keep.nm))) {
-      order_custom <- order.custom(X = row_vrb, ORD = row_vrb_unique)
-      data_ordered <- data[order_custom, ]
-      data_keep <- data_ordered[1:nrow(unstacked), keep.nm, drop = FALSE]
+      data_keep_rownm <- unique(data[c(rownames.nm, keep.nm)]) # unique.data.frame
+      data_keep <- data_keep_rownm[keep.nm]
       unstacked <- cbind(unstacked, data_keep) # cbind.data.frame
    }
    if (rownamesAsColumn) {
-      rtn <- cbind(setNames(data.frame("tmp" = row_vrb_unique[[2]]), nm = rownames.nm),
+      rtn <- cbind(setNames(data.frame("tmp" = rownames_unique), nm = rownames.nm),
          unstacked) # cbind.data.frame
       row.names(rtn) <- seq.int(from = 1L, to = nrow(rtn), by = 1L)
    } else {
       rtn <- unstacked
-      row.names(rtn) <- row_vrb_unique[[2]]
+      row.names(rtn) <- rownames_unique
+   }
+   return(rtn)
+}
+
+# Join #
+
+#' Join (or Merge) a List of Data-frames
+#'
+#' \code{Join} merges a list of data.frames into a single data.frame. It is a
+#' looped version of \code{plyr::join} that allows you to merge more than 2
+#' data.frames in the same function call. It is different from \code{plyr::join_all}
+#' because it allows you to join by the row.names.
+#'
+#' \code{Join} is a polished rendition of \code{Reduce(f = plyr::join, x = data.list)}.
+#' A future version of the function might allow for the \code{init} and \code{right}
+#' arguments from \code{Reduce}.
+#'
+#' @param data.list list of data.frames of data.
+#'
+#' @param by character vector specifying what colnames to merge \code{data.list} by.
+#' It can include "0" which specifies the rownames of \code{data.list}. If you are merging
+#' by rownames, then you can only merge by rownames and not other columns as well.
+#' This is because rownames, by definition, have all unique values. Note, it is
+#' assumed that no data.frame in \code{data.list} has a colname of "0", otherwise
+#' unexpected results are possible. If \code{by} is NULL, then all common columns
+#' will be used for merging. This is not recommended as it can result in \code{Join}
+#' merging different data.frames in \code{data.list} by different columns.
+#'
+#' @param type character vector of length 1 specifying the type of merge. Options
+#' are the following: 1. "full" = all rows from any of the data.frames in \code{data.list},
+#' 2. "left" = only rows from the first data.frame in \code{data.list}: \code{data.list[[1L]]}),
+#' 3. "right" = only rows from the last data.frame in \code{data.list}:
+#' \code{data.list[[length(data.list)]]}, 4. "inner" = only rows present in each
+#' and every of the data.frames in \code{data.list}. See \code{\link[plyr]{join}}.
+#'
+#' @param match character vector of length 1 specifying whether merged elements should
+#' be repeated in each row of the return object when duplicate values exist on the
+#' \code{by} columns. If "all", the merged elements will only appear in every row of the return object
+#' with repeated values. If "first", only the merged elements will only appear in the
+#' first row of the return object with subsequent rows containing NAs.
+#' See \code{\link[plyr]{join}}.
+#'
+#' @param rownamesAsColumn logical vector of length 1 specifying whether the original
+#' rownames in \code{data.list} should be a column in the return object. If TRUE,
+#' the rownames are a column and the returned data.frame has default row.names 1:nrow.
+#' If FALSE, the returned data.frame has rownames from the merging.
+#'
+#' @param rtn.rownames.nm character vector of length 1 specifying what the names of the rownames
+#' column should be in the return object. The \code{rtn.rownames.nm} argument is only
+#' used if \code{rownamesAsColumn} = TRUE.
+#'
+#' @return data.frame of all uniquely colnamed columns from \code{data.list} with
+#' the rows included specified by \code{type} and rownames specified by \code{keep.row.nm}.
+#' Similar to \code{plyr::join}, \code{Join} returns the rows in the same order as
+#' they appeared in \code{data.list}.
+#'
+#' @seealso
+#'    \code{\link[plyr]{join_all}}
+#'    \code{\link[plyr]{join}}
+#'    \code{\link{merge}}
+#'
+#' @examples
+#'
+#' # by column
+#' mtcars1 <- mtcars
+#' mtcars1$"id" <- row.names(mtcars)
+#' mtcars2 <- data.frame("id" = mtcars1$"id", "forward" = 1:32)
+#' mtcars3 <- data.frame("id" = mtcars1$"id", "backward" = 32:1)
+#' mtcars_list <- list(mtcars1, mtcars2, mtcars3)
+#' by_column <- Join(data.list = mtcars_list, by = "id")
+#' by_column2 <- Join(data.list = mtcars_list, by = "id", rownamesAsColumn = TRUE)
+#' by_column3 <- Join(data.list = mtcars_list, by = NULL)
+#'
+#' # by rownames
+#' mtcars1 <- mtcars
+#' mtcars2 <- data.frame("forward" = 1:32, row.names = row.names(mtcars))
+#' mtcars3 <- data.frame("backward" = 32:1, row.names = row.names(mtcars))
+#' by_rownm <- Join(data.list = list(mtcars1, mtcars2, mtcars3), by = "0")
+#' by_rownm2 <- Join(data.list = list(mtcars1, mtcars2, mtcars3), by = "0",
+#'    rownamesAsColumn = TRUE)
+#' identical(x = by_column[names(by_column) != "id"],
+#'    y = by_rownm) # same as converting rownames to a column in the data
+#' identical(x = by_column2[names(by_column2) != "id"],
+#'    y = by_rownm2) # same as converting rownames to a column in the data
+#'
+#' # inserted NAs (by columns)
+#' mtcars1 <- mtcars[1:4]
+#' mtcars2 <- setNames(obj = as.data.frame(scale(x = mtcars1[-1],
+#'    center = TRUE, scale = FALSE)), nm = paste0(names(mtcars1[-1]), "_c"))
+#' mtcars3 <- setNames(obj = as.data.frame(scale(x = mtcars1[-1],
+#'    center = FALSE, scale = TRUE)), nm = paste0(names(mtcars1[-1]), "_s"))
+#' tmp <- lapply(X = list(mtcars1, mtcars2, mtcars3), FUN = function(dat)
+#'    dat[sample(x = row.names(dat), size = 10), ])
+#' mtcars_list <- lapply(X = tmp, FUN = reshape::namerows)
+#' by_column_NA <- Join(data.list = mtcars_list, by = "id") # join by row.names
+#' by_column_NA2 <- Join(data.list = mtcars_list, by = "id", rownamesAsColumn = TRUE)
+#' identical(x = row.names(by_column_NA), # rownames from any data.frame are retained
+#'    y = Reduce(f = union, x = lapply(X = mtcars_list, FUN = row.names)))
+#'
+#' # inserted NAs (by rownames)
+#' mtcars1 <- mtcars[1:4]
+#' mtcars2 <- setNames(obj = as.data.frame(scale(x = mtcars1, center = TRUE, scale = FALSE)),
+#'    nm = paste0(names(mtcars1), "_c"))
+#' mtcars3 <- setNames(obj = as.data.frame(scale(x = mtcars1, center = FALSE, scale = TRUE)),
+#'    nm = paste0(names(mtcars1), "_s"))
+#' mtcars_list <- lapply(X = list(mtcars1, mtcars2, mtcars3), FUN = function(dat)
+#'    dat[sample(x = row.names(dat), size = 10), ])
+#' by_rownm_NA <- Join(data.list = mtcars_list, by = "0") # join by row.names
+#' by_rownm_NA2 <- Join(data.list = mtcars_list, by = "0", rownamesAsColumn = TRUE)
+#' identical(x = row.names(by_rownm_NA), # rownames from any data.frame are retained
+#'    y = Reduce(f = union, x = lapply(X = mtcars_list, FUN = row.names)))
+#'
+#' # types of joins
+#' Join(data.list = mtcars_list, by = "0", type = "left") # only rows included in mtcars1
+#' Join(data.list = mtcars_list, by = "0", type = "right") # only rows included in mtcars3
+#' Join(data.list = mtcars_list, by = "0", type = "inner") # only rows included in
+#'    # all 3 data.frames (might be empty due to random chance from sample() call)
+#'
+#' # errors returned
+#' tmp <- str2str::try_expr(
+#'    Join(data.list = list(mtcars, as.matrix(mtcars), as.matrix(mtcars)))
+#' )
+#' print(tmp[["error"]]) # "The elements with the following positions in
+#'    # `data.list` are not data.frames: 2 , 3"
+#' tmp <- str2str::try_expr(
+#'    Join(data.list = replicate(n = 3, mtcars, simplify = FALSE), by = 0)
+#' )
+#' print(tmp[["error"]]) # "Assertion on 'by' failed: Must be of type
+#'    # 'character' (or 'NULL'), not 'double'."
+#' tmp <- str2str::try_expr(
+#'    Join(data.list = replicate(n = 3, mtcars, simplify = FALSE), by = c("0","mpg"))
+#' )
+#' print(tmp[["error"]]) # "If '0' is a value in `by`, then it must be the
+#'    # only value and `by` must be length 1."
+#' tmp <- str2str::try_expr(
+#'    Join(data.list = list(attitude, attitude, mtcars), by = "mpg")
+#' )
+#' print(tmp[["error"]]) # "The data.frames associated with the following positions in
+#'    # `data.list` do not contain the `by` columns: 1 , 2"
+#'
+#' @export
+Join <- function(data.list, by, type = "full", match = "all",
+   rownamesAsColumn = FALSE, rtn.rownames.nm = "row_names") { # `right` does not seem to be making a difference in the output...
+
+   # error checking
+   checkmate::assertList(data.list)
+   test_DataFrame <- unlist(lapply(X = data.list, FUN = checkmate::testDataFrame))
+   if (!(all(test_DataFrame))) {
+      stop("The elements with the following positions in `data.list` are not data.frames: ",
+         paste(which(!(test_DataFrame)), collapse = " , "))
+   }
+   checkmate::assertCharacter(by, any.missing = FALSE, null.ok = TRUE)
+   if (!(is.null(by))) { # do not need to worry about by = "0" is by = NULL
+      if (is.element("0", set = by) && length(by) != 1L)
+         stop("If '0' is a value in `by`, then it must be the only value and `by` must be length 1.")
+      # I am adding in the row.names as a column in order to do the `by` argument checking
+      data.list <- lapply(X = data.list, FUN = function(dat)
+         cbind.data.frame("0" = row.names(dat), dat)) # so that if "0" is a colnames in any data.frame, the "0" column refering to rownames will be first
+      names.list <- lapply(X = data.list, FUN = names)
+      test_Names <- unlist(lapply(X = names.list, FUN = function(nm)
+         checkmate::testNames(x = by, subset.of = nm, what = "names")))
+      if (!(all(test_Names))) {
+         stop("The data.frames associated with the following positions in `data.list` do not contain the `by` columns: ",
+            paste(which(!(test_Names)), collapse = " , "))
+      }
+   }
+   type <- match.arg(arg = type, choices = c("full","left","right","inner"), several.ok = FALSE)
+   match <- match.arg(arg = match, choices = c("all","first"), several.ok = FALSE)
+   checkmate::assertLogical(rownamesAsColumn, any.missing = FALSE, len = 1L)
+   checkmate::assertCharacter(rtn.rownames.nm, any.missing = FALSE, len = 1L)
+
+   # function code
+   join_multi <- function(x, y) plyr::join(x = x, y = y, by = by, type = type, match = match)
+   output <- Reduce(f = join_multi, x = data.list, right = FALSE, accumulate = FALSE) # `init` argument we want to be missing (cannot be NULL)
+   output <- cbind.data.frame(output[by], pick(output, val = by, not = TRUE, nm = TRUE)) # so that by columns are first (still works if by = NULL)
+   if (!rownamesAsColumn) {
+      row.names(output) <- output$"0"
+      output$"0" <- NULL
+   }
+   if (rownamesAsColumn) {
+      output <- plyr::rename(output, replace = c("0" = rtn.rownames.nm))
+      row.names(output) <- seq.int(from = 1L, to = nrow(output), by = 1L)
+   }
+   return(output)
+}
+
+# cbind_fill #
+
+#' Bind DataFrames Along Columns - Filling in Missing Rows with NA
+#'
+#' \code{cbind_fill} binds together matrix-like objects by columns. The input
+#' objects will all internally be converted to data.frames by the generic function
+#' \code{as.data.frame}. When some objects do not contain rows that are present in other
+#' objects, NAs will be added to fill up the returned combined data.frame. If a matrix
+#' doesn't have rownames, the row number is used. Note that this means that a row
+#' with name "1" is merged with the first row of a matrix without name and so on.
+#' The returned matrix will always have row names. Colnames are ignored.
+#'
+#' \code{cbind_fill} ensures each object has unique colnames and then calls
+#' \code{Join(by = "0")}. It is intended to be the column version of \code{plyr::rbind.fill};
+#' it differs by allowing inputs to be matrices or vectors in addition to data.frames.
+#'
+#' @param ... any combination of data.frames, matrices, or atomic vectors input
+#' as separate arguments or a list.
+#'
+#' @return data.frame created by combining all the objects input together. It will always
+#' have rownames. If colnames are not provided to the matrix-like objects, the
+#' returned colnames can be rather esoteric since default colnaming will be revised
+#' to ensure each colname is unique. If \code{...} is a list of vectors, then the
+#' colnames will be the names of the list.
+#'
+#' @seealso
+#'    \code{\link{cbind_fill_matrix}}
+#'    \code{\link[plyr]{rbind.fill}}
+#'
+#' @examples
+#'
+#' # standard use
+#' A <- data.frame("first" = 1:2, "second" = 3:4)
+#' B <- data.frame("third" = 6:8, "fourth" = 9:11)
+#' print(A)
+#' print(B)
+#' cbind_fill(A, B)
+#'
+#' # help with unstack()
+#' row_keep <- sample(1:nrow(InsectSprays), size = 36)
+#' InsectSprays2 <- InsectSprays[row_keep, ]
+#' unstacked <- unstack(InsectSprays2)
+#' cbind_fill(unstacked)
+#'
+#' # using rownames for binding
+#' rownames(A) <- c("one", "two")
+#' rownames(B) <- c("three","two","one")
+#' print(A)
+#' print(B)
+#' cbind_fill(A, B)
+#'
+#' # matrices as input
+#' A <- matrix(1:4, 2)
+#' B <- matrix(6:11, 3)
+#' print(A)
+#' print(B)
+#' cbind_fill(A, B)
+#'
+#' # atomic vector input
+#' A <- data.frame("first" = 1:2, "second" = 3:4)
+#' B <- data.frame("third" = 6:8, "fourth" = 9:11)
+#' C <- c(12,13,14,15)
+#' D <- c(16,17,18,19)
+#' cbind_fill(A, B, C, D)
+#'
+#' # same as plyr::rbind.fill, it doesn't handles well some inputs with custom rownames
+#' # and others with default rownames
+#' rownames(A) <- c("one", "two")
+#' print(A)
+#' print(B)
+#' cbind_fill(A, B)
+#'
+#' @export
+cbind_fill <- function(...) {
+
+   # setup
+   dots <- list(...)
+   if (length(dots) == 0)
+      stop("No arguments were passed to the function")
+   if (is.list(dots[[1]]) & !(is.data.frame(dots[[1]])))
+      objs <- dots[[1]] # for when the user only provides a list of data.frames
+   else
+      objs <- dots
+   tmp <- lapply(X = objs, FUN = as.data.frame) # vectors will be converted to 1-column data.frames
+
+   # deal with same names
+   dfs <- Map(dfm = tmp, i = seq_along(tmp), f = function(dfm, i) {
+      nm <- names(dfm)
+      if (length(nm) == 1 && nm == "X[[i]]") names(dfm) <- paste0("X", i)
+      return(dfm) # to deal with multiple input vectors ending up with the same names
+   })
+   nm_by <- lapply(X = dfs, FUN = names)
+   len_by <- lapply(X = nm_by, FUN = length)
+   nm_all <- unlist(nm_by)
+   nm_unique <- make.unique(nm_all, sep = ".") # to deal with multiple data.frames with the same names
+   tmp <- Map(x = 1:length(dfs), times = len_by, f = rep.int)
+   fct <- as.factor(unlist(tmp))
+   nm_new <- split(x = nm_unique, f = fct)
+   dfs <- Map(x = dfs, value = nm_new, f = `names<-`)
+
+   # Join
+   rtn <- Join(dfs, by = "0", type = "full", match = "all")
+   if (is.list(dots[[1]]) && !(is.data.frame(dots[[1]])) && ncol(rtn) == length(objs)) {
+      colnames(rtn) <- names(objs)
+   }
+   return(rtn)
+}
+
+# cbind_fill_matrix #
+
+#' Bind Matrices Along Columns - Filling in Missing Rows with NA
+#'
+#' \code{cbind_fill_matrix} binds together matrix-like objects by columns. The input
+#' objects will all internally be converted to matrices by the generic function
+#' \code{as.matrix}. When some objects do not contain rows that are present in other
+#' objects, NAs will be added to fill up the returned combined matrix. If a matrix
+#' doesn't have rownames, the row number is used. Note that this means that a row
+#' with name "1" is merged with the first row of a matrix without name and so on.
+#' The returned matrix will always have row names. Colnames are ignored.
+#'
+#' \code{cbind_fill_matrix} is \code{t.default} + \code{plyr::rbind.fill.matrix}
+#' + \code{t.default} and is based on the code within \code{plyr::rbind.fill.matrix}.
+#'
+#' @param ... any combination of matrices, data.frames, or atomic vectors input
+#' as separate arguments or a list.
+#'
+#' @return matrix created by combining all the objects input together. It will always
+#' have rownames. It will only have colnames if \code{...} is a list of vectors,
+#' in which the colnames will be the names of the list.
+#'
+#' @seealso
+#'    \code{\link{cbind_fill}}
+#'    \code{\link[plyr]{rbind.fill.matrix}}
+#'
+#' @examples
+#'
+#' # standard use
+#' A <- matrix(1:4, 2)
+#' B <- matrix(6:11, 3)
+#' print(A)
+#' print(B)
+#' cbind_fill_matrix(A, B)
+#'
+#' # help with unstack()
+#' row_keep <- sample(1:nrow(InsectSprays), size = 36)
+#' InsectSprays2 <- InsectSprays[row_keep, ]
+#' unstacked <- unstack(InsectSprays2)
+#' cbind_fill_matrix(unstacked)
+#'
+#' # using rownames for binding
+#' rownames(A) <- c("one", "two")
+#' rownames(B) <- c("three","two","one")
+#' print(A)
+#' print(B)
+#' cbind_fill_matrix(A, B)
+#'
+#' # data.frame input
+#' C <- data.frame("V1" = c(12,13,14,15), row.names = c("one","two","three","four"))
+#' print(C)
+#' cbind_fill_matrix(A, B, C)
+#'
+#' # atomic vector input
+#' A <- matrix(1:4, 2)
+#' B <- matrix(6:11, 3)
+#' C <- c(12,13,14,15)
+#' cbind_fill_matrix(A, B, C)
+#'
+#' # same as plyr::rbind.fill.matrix, cbind_fill_matrix doesn't like some input
+#' # with dimnames and others without...
+#' rownames(A) <- c("one", "two")
+#' print(A)
+#' print(B)
+#' cbind_fill_matrix(A, B)
+#'
+#' @export
+cbind_fill_matrix <- function(...) {
+
+   dots <- list(...)
+   if (length(dots) == 0)
+      stop("No arguments were passed to the function")
+   if (is.list(dots[[1]]))
+      objs <- dots[[1]] # for when the user only provides a list of matrices
+   else
+      objs <- dots
+   matrices <- lapply(X = objs, FUN = as.matrix, # vectors will be converted to 1-column matrices
+      rownames.force = TRUE) # so user rownames are carried over from data.frames
+   t_matrices <- lapply(X = matrices, FUN = t.default)
+   tmp <- plyr::rbind.fill.matrix(t_matrices)
+   rtn <- t.default(tmp)
+   if (is.list(dots[[1]]) && ncol(rtn) == length(objs)) {
+      colnames(rtn) <- names(objs)
    }
    return(rtn)
 }
@@ -2257,7 +3057,8 @@ d2d <- function(d, fct = "chr", chr = "chr", lgl = "int", order.lvl = "alphanum"
 #' a character matrix. On the other side of things, if all columns in the data.frame
 #' are logical, then it will return a logical matrix. However, if every column in the
 #' data.frame is logical except for one factor or character vector, then it will
-#' return a character matrix.
+#' return a character matrix. (If you have a data.frame where 2 columns are the matrix
+#' dimnames and one column is the matrix elements, then use \code{d2a()}).
 #'
 #' @param d data.frame.
 #'
@@ -2439,58 +3240,140 @@ d2v <- function(d, along = 2, use.dimnames = TRUE, sep = "_",
 
 # d2a #
 
-#' Data-Frame to (3D+) Array
+#' Data-Frame to (3D+) Array or Matrix
 #'
-#' \code{d2a} converts a data.frame to a (3D+) array. This function assumes the
-#' data.frame contains 3+ variable dimensions, which will correspond to the
-#' returned arrays dimensions. One variable (and one variable only) must contain
-#' the elements which will correspond to the elements of the returned array.
+#' \code{d2a} converts a data.frame to a (3D+) array or matrix. This function assumes
+#' the data.frame contains 2+ variable dimensions, which will correspond to the
+#' returned arrays/matrix dimensions. One or multiple variables can contain the
+#' elements of the returned array (only one variable can contain the elements for
+#' returning a matrix). In the case of multiple variables, they will be binded as
+#' the last dimension in the returned array with dimnames equal to the variable names.
 #'
 #' \code{d2a} is a wrapper for \code{reshape::cast} with the addition of reordering
 #' the dimnames by position, which sorts the dimnames by the position they first
-#' appear in the variable dimensions of the data.frame (\code{reshape::cast}) sorts
+#' appear in the variable dimensions of the data.frame (\code{reshape::cast} sorts
 #' all the dimnames alphabetically).
 #'
-#' @param d data.frame with at least 4 columns, where 3+ columns are variable
-#' dimensions and 1 column contains the to-be array elements. The columns containing
-#' the variable dimensions do not need to be factors or character vectors.
+#' @param d data.frame with at least 3 columns, where 2+ columns are variable
+#' dimensions and 1+ columns contain the to-be returned array/matrix elements.
 #'
-#' @param el.nm character vector of length 1 specifying the colname in \code{d}
-#' that contains the to-be array elements.
+#' @param dim.nm character vector of 2+ length specifying the colnames in \code{d}
+#' that contain the variable dimensions. These do not need to be factors or character
+#' vectors. Note, all columns in \code{d} other than \code{dim.nm} are assumed to be
+#' element columns.
+#'
+#' @param rtn.dim.lab character vector of length 1 specifying the dimlabel to use
+#' for the last dimension in the returned array when there are multiple element columns
+#' in \code{d}. Note, that \code{NA} will be converted to "NA" and \code{NULL} will
+#' return an error. If you don't want any dimlabel to show, \code{""} is probably the
+#' best option. If there is only one element column in \code{d}, this argument is
+#' ignored by \code{d2a}.
 #'
 #' @param check logical vector of length 1 specifying whether to check the structure
 #' of the input arguments. For example, check whether \code{d} is a data.frame.
 #' This argument is available to allow flexibility in whether the user values
 #' informative error messages (TRUE) vs. computational efficiency (FALSE).
 #'
-#' @return (3D+) array containing the elements in \code{d[[el.nm]]}. The dimlabels
-#' are the colnames of \code{d} other than \code{el.nm} and the dimnames are the unique
-#' elements in those columns. The dimnames are ordered by position (rather than
-#' alphabetically), which allow for conversions back to the original array after
-#' a call to \code{a2d()}.
-#'
+#' @return (3D+) array or matrix formed from the dimensions \code{d[dim.nm]} with
+#' dimlabels = \code{dim.nm} (and \code{rtn.dim.lab} if there are multiple element
+#' columns). The dimnames are the unique elements \code{d[dim.nm]} and are ordered by
+#' position (rather than alphabetically), which allow for conversions back to the
+#' original array after a call to \code{a2d()} or matrix after a call to \code{m2d()}.
 #'
 #' @examples
+#'
+#' # 3D array
 #' print(HairEyeColor)
 #' d <- reshape::melt.array(HairEyeColor)
 #' a <- reshape::cast(d, Hair ~ Eye ~ Sex)
 #' identical(a, unclass(HairEyeColor)) # not the same as HairEyeColor
 #' d <- a2d(HairEyeColor)
-#' a <- d2a(d)
+#' a <- d2a(d, dim.nm = c("Hair","Eye","Sex"))
 #' identical(a, unclass(HairEyeColor)) # yes the same as HairEyeColor
+#'
+#' # matrix
+#' attitude_mat <- d2m(attitude)
+#' d <- m2d(attitude_mat, col = 0)
+#' m <- d2a(d)
+#' identical(m, attitude_mat) # yes the same as attitude_mat
+#'
+#' # correlation data.frame example for p-values using psych::corr.test(attitude[1:3])
+#' # corr_test <- psych::corr.test(attitude)
+#' # a <- lm2a(corr_test[c("r","se","t","p")])
+#' r <- matrix(c(1.0000000, 0.8254176, 0.4261169, 0.8254176, 1.0000000, 0.5582882,
+#'    0.4261169, 0.5582882, 1.0000000), nrow = 3, ncol = 3, byrow = FALSE)
+#' se <- matrix(c(0.0000000, 0.1066848, 0.1709662, 0.1066848, 0.0000000, 0.1567886,
+#'    0.1709662, 0.1567886, 0.0000000), nrow = 3, ncol = 3, byrow = FALSE)
+#' t <- matrix(c(Inf, 7.736978, 2.492404, 7.736978, Inf, 3.560771,
+#'    2.492404, 3.560771, Inf), nrow = 3, ncol = 3, byrow = FALSE)
+#' p <- matrix(c(0.000000e+00, 1.987682e-08, 1.887702e-02, 5.963047e-08, 0.000000e+00,
+#'    1.345519e-03, 0.018877022, 0.002691039, 0.000000000), nrow = 3, ncol = 3, byrow = FALSE)
+#' a <- abind::abind(r, se, t, p, along = 3L)
+#' dimnames(a) <- list(names(attitude[1:3]), names(attitude[1:3]), c("r","se","t","p"))
+#' d <- a2d(a = a, col = 3)
+#' a2 <- d2a(d = d, dim.nm = c("X1","X2"))
+#' all.equal(a, a2) # dimlabels differ
+#' dimnames(a2) <- unname(dimnames(a2))
+#' all.equal(a, a2) # now it is true
+#'
+#' # correlation data.frame example for confidence intervals using psych::corr.test(attitude[1:3])
+#' # corr_test <- psych::corr.test(attitude[1:3])
+#' # d <- corr_test[["ci"]][c("r","p","lower","upper")]
+#' # cbind(d, after = 0L) <- reshape::colsplit(row.names(d), split = "-", names = c("X1","X2"))
+#' # tmp <- d[c("X2","X1","r","p","lower","upper")]
+#' # d2 <- plyr::rename(tmp, c("X1" = "X2", "X2" = "X1"))
+#' # short_nm <- unique(c(fct2v(d[["X1"]]), fct2v(d[["X2"]])))
+#' # d3 <- data.frame("X1" = short_nm, "X2" = short_nm,
+#' #    "r" = NA_real_, "p" = NA_real_, "lower" = NA_real_, "upper" = NA_real_)
+#' # d_all <- ld2d(ld = list(d, d2, d3), rtn.listnames.nm = NULL, rtn.rownames.nm = NULL)
+#' d_all <- data.frame(
+#'    "X1" = c("ratng","ratng","cmpln","cmpln","prvlg","prvlg","ratng","cmpln","prvlg"),
+#'    "X2" = c("cmpln","prvlg","prvlg","ratng","ratng","cmpln","ratng","cmpln","prvlg"),
+#'    "r" = c(0.8254176, 0.4261169, 0.5582882, 0.8254176, 0.4261169, 0.5582882, NA, NA, NA),
+#'    "p" = c(1.987682e-08, 1.887702e-02, 1.345519e-03, 1.987682e-08,
+#'       1.887702e-02, 1.345519e-03, NA, NA, NA),
+#'    "lower" = c(0.66201277, 0.07778967, 0.24787510, 0.66201277, 0.07778967,
+#'       0.24787510, NA, NA, NA),
+#'    "upper" = c(0.9139139, 0.6817292, 0.7647418, 0.9139139, 0.6817292,
+#'       0.7647418, NA, NA, NA)
+#' )
+#' tmp <- d2a(d = d_all, dim.nm = c("X1","X2"), rtn.dim.lab = "stat")
+#' short_nm <- c("ratng","cmpln","prvlg")
+#' dim_names <- list(short_nm, short_nm, c("r","p","lower","upper"))
+#' a <- do.call(what = `[`, args = c(list(tmp), dim_names))
+#' print(a)
+#'
 #' @export
-d2a <- function(d, el.nm = "element", check = TRUE) {
+d2a <- function(d, dim.nm = names(d)[-ncol(d)], rtn.dim.lab = "el_nm", check = TRUE) {
 
    if (check) {
-      checkmate::assertDataFrame(d, min.cols = 4L)
-      checkmate::assertCharacter(el.nm, any.missing = FALSE, len = 1L)
+      checkmate::assertDataFrame(d, min.cols = 3L)
+      checkmate::assertCharacter(dim.nm, any.missing = FALSE, min.len = 2L)
+      checkmate::assertCharacter(rtn.dim.lab, any.missing = TRUE, len = 1L)
    }
 
-   dim_labels <- names(d)[names(d) != el.nm]
-   frm <- as.formula(paste(dim_labels, collapse = " ~ "))
-   tmp <- reshape::cast(data = d, formula = frm, value = "element")
-   dim_names <- lapply(X = d[names(d) != el.nm], FUN = unique)
+   el.nm <- str2str::pick(x = names(d), val = dim.nm, not = TRUE)
+   multi_el <- length(el.nm) > 1L
+   if (multi_el) { # for when multiple columns of elements
+      d <- reshape::melt.data.frame(data = d, id.vars = dim.nm,
+         measure.vars = el.nm) # variable_name = "variable" is the default
+      dim.nm <- c(dim.nm, "variable")
+      el.nm <- "value"
+   }
+   frm <- as.formula(paste(dim.nm, collapse = " ~ "))
+   tmp <- reshape::cast(data = d, formula = frm, value = el.nm)
+   if (is.data.frame(tmp)) { # for when only 2 variable dimensions and one element column, which converts to a matrix
+      row.names(tmp) <- tmp[[1]]
+      tmp <- tmp[-1]
+      attr(x = tmp, which = "idvars") <- NULL
+      attr(x = tmp, which = "rdimnames") <- NULL
+      tmp <- d2m(tmp)
+   }
+   dim_names <- lapply(X = d[dim.nm], FUN = unique)
    a <- do.call(what = `[`, args = c(list(tmp), dim_names))
+   n_dim <- ndim(a)
+   if (n_dim > 2L && multi_el) # only applicable if 3D+ array with multiple element columns
+      dimlabels(a)[n_dim] <- rtn.dim.lab # rtn.dim.lab = NA results in "NA" dimlabel and rtn.dim.lab = NULL results in an error
    return(a)
 }
 
@@ -2504,7 +3387,7 @@ d2a <- function(d, el.nm = "element", check = TRUE) {
 #' dimension of the array to be the columns. All other dimensions are variables
 #' in the data.frame. This is different than \code{as.data.frame.array} which
 #' converts the (3D+) array to a matrix first; although it is very similar to
-#' \code{as.data.frame.table}.
+#' \code{as.data.frame.table} when \code{col} = 0.
 #'
 #' \code{a2d} is mostly a wrapper for \code{reshape::melt.array} (+ \code{reshape::cast})
 #' that allows for the variable dimensions to be character vectors rather than factors.
@@ -2514,9 +3397,9 @@ d2a <- function(d, el.nm = "element", check = TRUE) {
 #' @param col integer vector or character vector of length 1 specifing the dimension
 #' of \code{a} to have as columns in the return object. If an integer vector,
 #' \code{col} refers to the dimension number. If a character vector, \code{col}
-#' refers to the name of the dimension. The columns are in order of the dimnames
-#' for that dimension (not alphabetical order like \code{reshape::cast}). If 0
-#' (default), then no dimension of the array has a column and the function becomes
+#' refers to the name of the dimension (i.e., dimlabel). The columns are in order
+#' of the dimnames for that dimension (not alphabetical order like \code{reshape::cast}).
+#' If 0 (default), then no dimension of the array are columns and the function becomes
 #' similar to \code{as.data.frame.table}.
 #'
 #' @param stringsAsFactors logical vector of length 1 specifying whether the variable
@@ -2528,19 +3411,36 @@ d2a <- function(d, el.nm = "element", check = TRUE) {
 #' informative error messages (TRUE) vs. computational efficiency (FALSE).
 #'
 #' @return data.frame of \code{a}'s elements. The colnames of the variable dimensions
-#' are the names of the dimensions in \code{a}. If there were no dimension names in
-#' \code{a}, then each dimension is named after its number with an X in front.
-#' If \code{col} is not 0, then the rest of the colnames are the dimnames of
+#' are the dimlabels in \code{a}. If there were no dimlabels in \code{a}, then each
+#' dimension is named after its number with an X in front. If \code{col} is not 0,
+#' then the rest of the colnames are the dimnames of
 #' that dimension from \code{a}. If \code{col} is 0, then the names of the single
 #' column with \code{a}'s elements is "element".
 #'
 #' @examples
+#'
 #' a2d(HairEyeColor)
 #' a2d(HairEyeColor, col = 1)
 #' a2d(HairEyeColor, col = "Hair", stringsAsFactors = TRUE)
 #' a2d(HairEyeColor, col = 2)
 #' a2d(HairEyeColor, col = "Sex", stringsAsFactors = TRUE)
-#' try_expr(a2d(as.matrix(attitude))) # error due to inputting a matrix. Instead use \code{m2d}.
+#' try_expr(a2d(as.matrix(attitude))) # error due to inputting a matrix. Instead use `m2d`.
+#'
+#' # correlation array example from psych::corr.test(attitude[1:3])
+#' # corr_test <- psych::corr.test(attitude[1:3])
+#' # a <- lm2a(corr_test[c("r","se","t","p")])
+#' r <- matrix(c(1.0000000, 0.8254176, 0.4261169, 0.8254176, 1.0000000, 0.5582882,
+#'    0.4261169, 0.5582882, 1.0000000), nrow = 3, ncol = 3, byrow = FALSE)
+#' se <- matrix(c(0.0000000, 0.1066848, 0.1709662, 0.1066848, 0.0000000, 0.1567886,
+#'    0.1709662, 0.1567886, 0.0000000), nrow = 3, ncol = 3, byrow = FALSE)
+#' t <- matrix(c(Inf, 7.736978, 2.492404, 7.736978, Inf, 3.560771,
+#'    2.492404, 3.560771, Inf), nrow = 3, ncol = 3, byrow = FALSE)
+#' p <- matrix(c(0.000000e+00, 1.987682e-08, 1.887702e-02, 5.963047e-08, 0.000000e+00,
+#'    1.345519e-03, 0.018877022, 0.002691039, 0.000000000), nrow = 3, ncol = 3, byrow = FALSE)
+#' a <- abind::abind(r, se, t, p, along = 3L)
+#' dimnames(a) <- list(names(attitude[1:3]), names(attitude[1:3]), c("r","se","t","p"))
+#' d <- a2d(a = a, col = 3)
+#'
 #' @export
 a2d <- function(a, col = 0, stringsAsFactors = FALSE, check = TRUE) {
 
@@ -2560,11 +3460,18 @@ a2d <- function(a, col = 0, stringsAsFactors = FALSE, check = TRUE) {
 
    d_melt <- reshape::melt.array(a) # defaults to using dimlabels as returned data.frame names
    if (col == 0) {
-      d <- d_melt
+      order_custom <- order.custom(X = d_melt[-ncol(d_melt)], ORD = dimnames(a))
+      d <- d_melt[order_custom, ]
       names(d)[ncol(d)] <- "element"
    } else {
-      if (is.numeric(col)) col_dimlabels <- names(d_melt)[col]
-      if (is.character(col)) col_dimlabels <- col
+      if (is.numeric(col)) {
+         col_position <- col
+         col_dimlabels <- names(d_melt)[col]
+      }
+      if (is.character(col)) {
+         col_position <- which(col == dimlabels(a))
+         col_dimlabels <- col
+      }
       frm <- as.formula(paste("...", "~", col_dimlabels))
       d_cast <- reshape::cast(data = d_melt, formula = frm, fun.aggregate = NULL,
          add.missing = FALSE, value = "element")
@@ -2573,7 +3480,10 @@ a2d <- function(a, col = 0, stringsAsFactors = FALSE, check = TRUE) {
       d <- as.data.frame.list(unclass(d_cast)) # as.data.frame.list
       col_dimnames <- unique(as.character(d_melt[[col_dimlabels]]), fromLast = FALSE)
       other_dimlabels <- names(d)[1L:(ncol(d) - length(col_dimnames))]
-      d <- d[c(other_dimlabels, col_dimnames)] # put columns in order of dimnames
+      d <- d[c(other_dimlabels, col_dimnames)] # put columns last and in order of dimnames
+      order_custom <- order.custom(X = d[other_dimlabels],
+         ORD = dimnames(a)[-col_position])
+      d <- d[order_custom, ] # reorder the dimension variables since cast() puts them back in alphebetical order!
    }
    if (stringsAsFactors) {
       d <- d2d(d = d, fct = "fct", chr = "fct", lgl = "lgl", order.lvl = "alphanum",
@@ -2583,6 +3493,7 @@ a2d <- function(a, col = 0, stringsAsFactors = FALSE, check = TRUE) {
       d <- d2d(d = d, fct = "chr", chr = "chr", lgl = "lgl", order.lvl = "alphanum",
          decreasing = FALSE, na.lvl = FALSE)
    }
+   row.names(d) <- seq.int(from = 1L, to = nrow(d), by = 1L)
    return(d)
 }
 
@@ -3591,6 +4502,8 @@ a2lm <- function(a, along = 3L, check = TRUE) {
 #' # along = 2 for cbinding
 #' ld2d(ld, along = 2) # does not check/rename for double colnames
 #' ld2d(ld, along = 2, check.names = TRUE) # makes unique colnames
+#' ld2d(setNames(ld, nm = c("One","Two","Three")), along = 2,
+#'    check.names = TRUE) # does not add prefixes from list names
 #' @export
 ld2d <- function(ld, along = 1, fill = FALSE, rtn.listnames.nm = "list_names", rtn.rownames.nm = "row_names",
    stringsAsFactors = FALSE, check.names = FALSE, check = TRUE) {
@@ -3638,7 +4551,8 @@ ld2d <- function(ld, along = 1, fill = FALSE, rtn.listnames.nm = "list_names", r
       row.names(d) <- seq_len(nrow(d))
    }
    if (along == 2) {
-      d <- data.frame(ld, stringsAsFactors = stringsAsFactors, check.names = check.names)
+      d <- data.frame(unname(ld), stringsAsFactors = stringsAsFactors,
+         check.names = check.names) # use unname(ld) to prevent data.frame() from adding prefixes to variables names
    }
    return(d)
 }

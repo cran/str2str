@@ -26,7 +26,9 @@ similar to \code{cbind}.}
 
 \item{value}{data.frame, matrix, or atomic vector to be added as columns to
 \code{data}. If a data.frame or matrix, it must have the same nrow as \code{data}.
-If an atomic vector, it must have length equal to nrow of \code{data}.}
+If an atomic vector, it must have length equal to nrow of \code{data}. Note, if it
+is an atomic vector and \code{col.nm} is NULL, then the name of the added column
+will be "value".}
 }
 \value{
 Like other similar functions (e.g., \code{`names<-`} and \code{`[<-`}),

@@ -2,17 +2,25 @@
 % Please edit documentation in R/str2str_functions.R
 \name{d2a}
 \alias{d2a}
-\title{Data-Frame to (3D+) Array}
+\title{Data-Frame to (3D+) Array or Matrix}
 \usage{
-d2a(d, el.nm = "element", check = TRUE)
+d2a(d, dim.nm = names(d)[-ncol(d)], rtn.dim.lab = "el_nm", check = TRUE)
 }
 \arguments{
-\item{d}{data.frame with at least 4 columns, where 3+ columns are variable
-dimensions and 1 column contains the to-be array elements. The columns containing
-the variable dimensions do not need to be factors or character vectors.}
+\item{d}{data.frame with at least 3 columns, where 2+ columns are variable
+dimensions and 1+ columns contain the to-be returned array/matrix elements.}
 
-\item{el.nm}{character vector of length 1 specifying the colname in \code{d}
-that contains the to-be array elements.}
+\item{dim.nm}{character vector of 2+ length specifying the colnames in \code{d}
+that contain the variable dimensions. These do not need to be factors or character
+vectors. Note, all columns in \code{d} other than \code{dim.nm} are assumed to be
+element columns.}
+
+\item{rtn.dim.lab}{character vector of length 1 specifying the dimlabel to use
+for the last dimension in the returned array when there are multiple element columns
+in \code{d}. Note, that \code{NA} will be converted to "NA" and \code{NULL} will
+return an error. If you don't want any dimlabel to show, \code{""} is probably the
+best option. If there is only one element column in \code{d}, this argument is
+ignored by \code{d2a}.}
 
 \item{check}{logical vector of length 1 specifying whether to check the structure
 of the input arguments. For example, check whether \code{d} is a data.frame.
@@ -20,30 +28,87 @@ This argument is available to allow flexibility in whether the user values
 informative error messages (TRUE) vs. computational efficiency (FALSE).}
 }
 \value{
-(3D+) array containing the elements in \code{d[[el.nm]]}. The dimlabels
-are the colnames of \code{d} other than \code{el.nm} and the dimnames are the unique
-elements in those columns. The dimnames are ordered by position (rather than
-alphabetically), which allow for conversions back to the original array after
-a call to \code{a2d()}.
+(3D+) array or matrix formed from the dimensions \code{d[dim.nm]} with
+dimlabels = \code{dim.nm} (and \code{rtn.dim.lab} if there are multiple element
+columns). The dimnames are the unique elements \code{d[dim.nm]} and are ordered by
+position (rather than alphabetically), which allow for conversions back to the
+original array after a call to \code{a2d()} or matrix after a call to \code{m2d()}.
 }
 \description{
-\code{d2a} converts a data.frame to a (3D+) array. This function assumes the
-data.frame contains 3+ variable dimensions, which will correspond to the
-returned arrays dimensions. One variable (and one variable only) must contain
-the elements which will correspond to the elements of the returned array.
+\code{d2a} converts a data.frame to a (3D+) array or matrix. This function assumes
+the data.frame contains 2+ variable dimensions, which will correspond to the
+returned arrays/matrix dimensions. One or multiple variables can contain the
+elements of the returned array (only one variable can contain the elements for
+returning a matrix). In the case of multiple variables, they will be binded as
+the last dimension in the returned array with dimnames equal to the variable names.
 }
 \details{
 \code{d2a} is a wrapper for \code{reshape::cast} with the addition of reordering
 the dimnames by position, which sorts the dimnames by the position they first
-appear in the variable dimensions of the data.frame (\code{reshape::cast}) sorts
+appear in the variable dimensions of the data.frame (\code{reshape::cast} sorts
 all the dimnames alphabetically).
 }
 \examples{
+
+# 3D array
 print(HairEyeColor)
 d <- reshape::melt.array(HairEyeColor)
 a <- reshape::cast(d, Hair ~ Eye ~ Sex)
 identical(a, unclass(HairEyeColor)) # not the same as HairEyeColor
 d <- a2d(HairEyeColor)
-a <- d2a(d)
+a <- d2a(d, dim.nm = c("Hair","Eye","Sex"))
 identical(a, unclass(HairEyeColor)) # yes the same as HairEyeColor
+
+# matrix
+attitude_mat <- d2m(attitude)
+d <- m2d(attitude_mat, col = 0)
+m <- d2a(d)
+identical(m, attitude_mat) # yes the same as attitude_mat
+
+# correlation data.frame example for p-values using psych::corr.test(attitude[1:3])
+# corr_test <- psych::corr.test(attitude)
+# a <- lm2a(corr_test[c("r","se","t","p")])
+r <- matrix(c(1.0000000, 0.8254176, 0.4261169, 0.8254176, 1.0000000, 0.5582882,
+   0.4261169, 0.5582882, 1.0000000), nrow = 3, ncol = 3, byrow = FALSE)
+se <- matrix(c(0.0000000, 0.1066848, 0.1709662, 0.1066848, 0.0000000, 0.1567886,
+   0.1709662, 0.1567886, 0.0000000), nrow = 3, ncol = 3, byrow = FALSE)
+t <- matrix(c(Inf, 7.736978, 2.492404, 7.736978, Inf, 3.560771,
+   2.492404, 3.560771, Inf), nrow = 3, ncol = 3, byrow = FALSE)
+p <- matrix(c(0.000000e+00, 1.987682e-08, 1.887702e-02, 5.963047e-08, 0.000000e+00,
+   1.345519e-03, 0.018877022, 0.002691039, 0.000000000), nrow = 3, ncol = 3, byrow = FALSE)
+a <- abind::abind(r, se, t, p, along = 3L)
+dimnames(a) <- list(names(attitude[1:3]), names(attitude[1:3]), c("r","se","t","p"))
+d <- a2d(a = a, col = 3)
+a2 <- d2a(d = d, dim.nm = c("X1","X2"))
+all.equal(a, a2) # dimlabels differ
+dimnames(a2) <- unname(dimnames(a2))
+all.equal(a, a2) # now it is true
+
+# correlation data.frame example for confidence intervals using psych::corr.test(attitude[1:3])
+# corr_test <- psych::corr.test(attitude[1:3])
+# d <- corr_test[["ci"]][c("r","p","lower","upper")]
+# cbind(d, after = 0L) <- reshape::colsplit(row.names(d), split = "-", names = c("X1","X2"))
+# tmp <- d[c("X2","X1","r","p","lower","upper")]
+# d2 <- plyr::rename(tmp, c("X1" = "X2", "X2" = "X1"))
+# short_nm <- unique(c(fct2v(d[["X1"]]), fct2v(d[["X2"]])))
+# d3 <- data.frame("X1" = short_nm, "X2" = short_nm,
+#    "r" = NA_real_, "p" = NA_real_, "lower" = NA_real_, "upper" = NA_real_)
+# d_all <- ld2d(ld = list(d, d2, d3), rtn.listnames.nm = NULL, rtn.rownames.nm = NULL)
+d_all <- data.frame(
+   "X1" = c("ratng","ratng","cmpln","cmpln","prvlg","prvlg","ratng","cmpln","prvlg"),
+   "X2" = c("cmpln","prvlg","prvlg","ratng","ratng","cmpln","ratng","cmpln","prvlg"),
+   "r" = c(0.8254176, 0.4261169, 0.5582882, 0.8254176, 0.4261169, 0.5582882, NA, NA, NA),
+   "p" = c(1.987682e-08, 1.887702e-02, 1.345519e-03, 1.987682e-08,
+      1.887702e-02, 1.345519e-03, NA, NA, NA),
+   "lower" = c(0.66201277, 0.07778967, 0.24787510, 0.66201277, 0.07778967,
+      0.24787510, NA, NA, NA),
+   "upper" = c(0.9139139, 0.6817292, 0.7647418, 0.9139139, 0.6817292,
+      0.7647418, NA, NA, NA)
+)
+tmp <- d2a(d = d_all, dim.nm = c("X1","X2"), rtn.dim.lab = "stat")
+short_nm <- c("ratng","cmpln","prvlg")
+dim_names <- list(short_nm, short_nm, c("r","p","lower","upper"))
+a <- do.call(what = `[`, args = c(list(tmp), dim_names))
+print(a)
+
 }

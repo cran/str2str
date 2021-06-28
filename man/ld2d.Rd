@@ -81,4 +81,6 @@ ld2d(ld, fill = TRUE) # NAs added
 # along = 2 for cbinding
 ld2d(ld, along = 2) # does not check/rename for double colnames
 ld2d(ld, along = 2, check.names = TRUE) # makes unique colnames
+ld2d(setNames(ld, nm = c("One","Two","Three")), along = 2,
+   check.names = TRUE) # does not add prefixes from list names
 }

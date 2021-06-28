@@ -7,7 +7,7 @@
 stack2(
   data,
   select.nm,
-  keep.nm = NULL,
+  keep.nm = pick(x = names(data), val = select.nm, not = TRUE),
   rtn.el.nm = "el",
   rtn.vrbnames.nm = "vrb_names",
   rtn.rownames.nm = "row_names",
@@ -24,7 +24,8 @@ variables to be stacked.}
 \item{keep.nm}{optional argument containing a character vector of colnames from
 \code{data} specifying the additional columns to be included in the return object.
 These columns are repeated down the data.frame as they are not stacked together.
-The default is NULL where no additional columns are included in the return object.}
+The default is the inclusion of all other columns in \code{data} other than
+\code{select.nm}. If NULL, then no other columns will be included.}
 
 \item{rtn.el.nm}{character vector of length 1 specifying the name of the column
 in the return object that corresponds to the elements of the stacked variables.}
@@ -69,6 +70,8 @@ vectors rather than factors, and 3) can order by rownames original positions
 rather than the variable names being stacked call order.
 }
 \examples{
+
+# general
 stack2(data = mtcars, select.nm = c("disp","hp","drat","wt","qsec"),
    keep.nm = c("vs","am"))
 stack2(data = mtcars, select.nm = c("disp","hp","drat","wt","qsec"),
@@ -77,9 +80,18 @@ stack2(data = mtcars, select.nm = c("disp","hp","drat","wt","qsec"),
 stack2(data = mtcars, select.nm = c("disp","hp","drat","wt","qsec"),
    keep.nm = pick(x = names(mtcars), val = c("disp","hp","drat","wt","qsec"),
    not = TRUE)) # include all columns from `data` in the return object
-# compare to utils::stack.data.frame and reshape::melt.data.frame
-ChickWeight2 <- ChickWeight
-ChickWeight2$"Diet" <- as.integer(ChickWeight$"Diet")
+
+# keep options
+stack2(data = mtcars, select.nm = c("mpg","cyl","disp")
+   ) # default = keep all other variables in `data`
+stack2(data = mtcars, select.nm = c("mpg","cyl","disp"), keep = c("gear","carb")
+   ) # character vector = keep only specified variables in `data`
+stack2(data = mtcars, select.nm = c("mpg","cyl","disp"), keep = NULL,
+   ) # NULL = keep no other variables in `data`
+
+# compare to utils:::stack.data.frame and reshape::melt.data.frame
+ChickWeight2 <- as.data.frame(datasets::ChickWeight)
+ChickWeight2$"Diet" <- as.integer(ChickWeight2$"Diet")
 x <- stack(x = ChickWeight2, select = c("weight","Diet")) # does not allow
    # keeping additional columns
 y <- reshape::melt(data = ChickWeight2, measure.vars = c("weight","Diet"),
@@ -88,4 +100,9 @@ y <- reshape::melt(data = ChickWeight2, measure.vars = c("weight","Diet"),
 z <- stack2(data = ChickWeight2, select.nm = c("weight","Diet"),
    keep.nm = c("Chick","Time"))
 head(x); head(y); head(z)
+}
+\seealso{
+\code{\link{unstack2}}
+   \code{\link{stack}}
+   \code{\link[reshape]{melt.data.frame}}
 }

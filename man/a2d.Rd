@@ -12,9 +12,9 @@ a2d(a, col = 0, stringsAsFactors = FALSE, check = TRUE)
 \item{col}{integer vector or character vector of length 1 specifing the dimension
 of \code{a} to have as columns in the return object. If an integer vector,
 \code{col} refers to the dimension number. If a character vector, \code{col}
-refers to the name of the dimension. The columns are in order of the dimnames
-for that dimension (not alphabetical order like \code{reshape::cast}). If 0
-(default), then no dimension of the array has a column and the function becomes
+refers to the name of the dimension (i.e., dimlabel). The columns are in order
+of the dimnames for that dimension (not alphabetical order like \code{reshape::cast}).
+If 0 (default), then no dimension of the array are columns and the function becomes
 similar to \code{as.data.frame.table}.}
 
 \item{stringsAsFactors}{logical vector of length 1 specifying whether the variable
@@ -27,9 +27,9 @@ informative error messages (TRUE) vs. computational efficiency (FALSE).}
 }
 \value{
 data.frame of \code{a}'s elements. The colnames of the variable dimensions
-are the names of the dimensions in \code{a}. If there were no dimension names in
-\code{a}, then each dimension is named after its number with an X in front.
-If \code{col} is not 0, then the rest of the colnames are the dimnames of
+are the dimlabels in \code{a}. If there were no dimlabels in \code{a}, then each
+dimension is named after its number with an X in front. If \code{col} is not 0,
+then the rest of the colnames are the dimnames of
 that dimension from \code{a}. If \code{col} is 0, then the names of the single
 column with \code{a}'s elements is "element".
 }
@@ -38,17 +38,34 @@ column with \code{a}'s elements is "element".
 dimension of the array to be the columns. All other dimensions are variables
 in the data.frame. This is different than \code{as.data.frame.array} which
 converts the (3D+) array to a matrix first; although it is very similar to
-\code{as.data.frame.table}.
+\code{as.data.frame.table} when \code{col} = 0.
 }
 \details{
 \code{a2d} is mostly a wrapper for \code{reshape::melt.array} (+ \code{reshape::cast})
 that allows for the variable dimensions to be character vectors rather than factors.
 }
 \examples{
+
 a2d(HairEyeColor)
 a2d(HairEyeColor, col = 1)
 a2d(HairEyeColor, col = "Hair", stringsAsFactors = TRUE)
 a2d(HairEyeColor, col = 2)
 a2d(HairEyeColor, col = "Sex", stringsAsFactors = TRUE)
-try_expr(a2d(as.matrix(attitude))) # error due to inputting a matrix. Instead use \code{m2d}.
+try_expr(a2d(as.matrix(attitude))) # error due to inputting a matrix. Instead use `m2d`.
+
+# correlation array example from psych::corr.test(attitude[1:3])
+# corr_test <- psych::corr.test(attitude[1:3])
+# a <- lm2a(corr_test[c("r","se","t","p")])
+r <- matrix(c(1.0000000, 0.8254176, 0.4261169, 0.8254176, 1.0000000, 0.5582882,
+   0.4261169, 0.5582882, 1.0000000), nrow = 3, ncol = 3, byrow = FALSE)
+se <- matrix(c(0.0000000, 0.1066848, 0.1709662, 0.1066848, 0.0000000, 0.1567886,
+   0.1709662, 0.1567886, 0.0000000), nrow = 3, ncol = 3, byrow = FALSE)
+t <- matrix(c(Inf, 7.736978, 2.492404, 7.736978, Inf, 3.560771,
+   2.492404, 3.560771, Inf), nrow = 3, ncol = 3, byrow = FALSE)
+p <- matrix(c(0.000000e+00, 1.987682e-08, 1.887702e-02, 5.963047e-08, 0.000000e+00,
+   1.345519e-03, 0.018877022, 0.002691039, 0.000000000), nrow = 3, ncol = 3, byrow = FALSE)
+a <- abind::abind(r, se, t, p, along = 3L)
+dimnames(a) <- list(names(attitude[1:3]), names(attitude[1:3]), c("r","se","t","p"))
+d <- a2d(a = a, col = 3)
+
 }

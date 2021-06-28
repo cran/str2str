@@ -3,7 +3,7 @@
 \docType{package}
 \name{str2str}
 \alias{str2str}
-\title{str2str: Convert R Objects from One Structure to Another.}
+\title{Structure to Structure}
 \description{
 \code{str2str} is a package for converting R objects to different structures.
 It focuses on four primary R objects: (atomic) vectors, matrices, data.frames, and
@@ -34,22 +34,27 @@ of less convenient convertions for commonly used versions of R objects. The
 
 \section{Abbreviations}{
 
-v = (atomic) vector
-m = matrix
-d = data.frame
-a = (3D+) array
-l = list
-el = elements
-nm = names
-uv = unique values
-lgl = logical
-int = integer
-dbl = double
-chr = character
-fct = factor
-lvl = levels
-vrb = variable
-frm = formula
-fun = function
+\describe{See the table below:
+   \item{v}{(atomic) vector}
+   \item{m}{matrix}
+   \item{d}{data.frame}
+   \item{a}{(3D+) array}
+   \item{l}{list}
+   \item{el}{elements}
+   \item{nm}{names}
+   \item{uv}{unique values}
+   \item{lgl}{logical}
+   \item{int}{integer}
+   \item{dbl}{double}
+   \item{num}{numeric}
+   \item{chr}{character}
+   \item{fct}{factor}
+   \item{lvl}{levels}
+   \item{vrb}{variable}
+   \item{frm}{formula}
+   \item{fun}{function}
+   \item{rtn}{return}
+   \item{str}{structure}
+}
 }
 

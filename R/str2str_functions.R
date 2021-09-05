@@ -2,33 +2,33 @@
 
 #' Structure to Structure
 #'
-#' @description \code{str2str} is a package for converting R objects to different structures.
-#' It focuses on four primary R objects: (atomic) vectors, matrices, data.frames, and
-#' arrays as well as lists of these objects. For example, converting a (atomic) vector to
-#' a data.frame (i.e., \code{v2d()}) or a list of (atomic) vectors to a matrix
-#' (i.e., \code{lv2m()}. The current version of the package does not have a
-#' function for every convertion (e.g., \code{a2m()}), but some additional
-#' convertion functions may be included in future versions if I find a use for them.
-#' The package was motivated by limitations of the base R \code{as.<str>.<method>}
-#' suite of functions and the \code{plyr} R package \code{**ply(.fun = NULL)}
-#' suite of functions for converting R objects to different structures. While those
-#' functions are often useful, there are times different conversions are desired
-#' or different naming schemes are desired. That is what this package offers R users.
-#' It also contains various utility functions for working with common R objects.
-#' For example, \code{is.colnames} and \code{ndim}.
+#' @description \code{str2str} is a package for converting R objects to
+#'   different structures. It focuses on four primary R objects: (atomic)
+#'   vectors, matrices, data.frames, and arrays as well as lists of these
+#'   objects. For example, converting a (atomic) vector to a data.frame (i.e.,
+#'   \code{v2d()}) or a list of (atomic) vectors to a matrix (i.e.,
+#'   \code{lv2m()}. The current version of the package does not have a function
+#'   for every convertion (e.g., \code{a2m()}), but some additional convertion
+#'   functions may be included in future versions if I find a use for them. The
+#'   package was motivated by limitations of the base R \code{as.<str>.<method>}
+#'   suite of functions and the \code{plyr} R package \code{**ply(.fun = NULL)}
+#'   suite of functions for converting R objects to different structures. While
+#'   those functions are often useful, there are times different conversions are
+#'   desired or different naming schemes are desired. That is what this package
+#'   offers R users. It also contains various utility functions for working with
+#'   common R objects. For example, \code{is.colnames} and \code{ndim}.
 #'
-#' @section Limitations:
-#' This packages does NOT handle the nuances of R objects. It is not for comprehensive
-#' restructuring of any version of R objects, but rather for restructuring commonly
-#' used versions of R objects. For example, the functions are not tested with the
-#' raw and complex typeof atomic vectors, list arrays, or data.frames containing non-atomic
-#' vector columns (e.g., matrix or list columns). The base R \code{as.<str>.<method>}
-#' functions allow for comprehensive restructuring of R objects; however, at the cost
-#' of less convenient convertions for commonly used versions of R objects. The
-#' \code{str2str} package seeks to fill that gap in useability.
+#' @section Limitations: This packages does NOT handle the nuances of R objects.
+#'   It is not for comprehensive restructuring of any version of R objects, but
+#'   rather for restructuring commonly used versions of R objects. For example,
+#'   the functions are not tested with the raw and complex typeof atomic
+#'   vectors, list arrays, or data.frames containing non-atomic vector columns
+#'   (e.g., matrix or list columns). The base R \code{as.<str>.<method>}
+#'   functions allow for comprehensive restructuring of R objects; however, at
+#'   the cost of less convenient convertions for commonly used versions of R
+#'   objects. The \code{str2str} package seeks to fill that gap in useability.
 #'
-#' @section Abbreviations:
-#' \describe{See the table below:
+#' @section Abbreviations: \describe{See the table below
 #'    \item{v}{(atomic) vector}
 #'    \item{m}{matrix}
 #'    \item{d}{data.frame}
@@ -395,11 +395,33 @@ is.Date <- function(x) {
 #' time <- as.POSIXct(tmp) # as.POSIXct.POSIXlt
 #' is.POSIXct(time)
 #' class(time) <- append(class(time), "extra_class")
-#' is.POSIXct(time) # classes other than Date are allowed
+#' is.POSIXct(time) # classes other than POSIXct are allowed
 #' is.POSIXct(list(time)) # returns FALSE
 #' @export
 is.POSIXct <- function(x) {
    is(object = x, class2 = "POSIXct") # help(is) says is() is a little faster than inherits()
+}
+
+# is.POSIXlt
+
+#' Test for a POSIXlt object
+#'
+#' \code{is.POSIXlt} returns whether an object is a POSIXlt object (aka has class = "POSIXlt").
+#'
+#' @param x an object.
+#'
+#' @return TRUE is \code{x} has class "POSIXlt" and FALSE if \code{x} does not have class "POSIXlt".
+#'
+#' @examples
+#' time <- as.POSIXlt("2021-05-24 21:49:11", tz = "America/New_York",
+#'    format = "%Y-%m-%d %H:%M:%OS") # as.POSIXlt.character
+#' is.POSIXlt(time)
+#' class(time) <- append(class(time), "extra_class")
+#' is.POSIXlt(time) # classes other than POSIXlt are allowed
+#' is.POSIXlt(list(time)) # returns FALSE
+#' @export
+is.POSIXlt <- function(x) {
+   is(object = x, class2 = "POSIXlt") # help(is) says is() is a little faster than inherits()
 }
 
 # all_same #
@@ -539,17 +561,25 @@ all_diff <- function(x) {
 #' vec2 <- `append<-`(vec1, value = add1).
 #'
 #' @examples
+#'
+#' # no names
 #' x <- letters
 #' append(x) <- LETTERS
-#' append(x, after = match(x = "z", table = x)) <- "case_switch" # with the position
+#' append(x, after = match("z", table = x)) <- "case_switch" # with the position
 #'    # of the added value specified
+#'
+#' # ya names
 #' y <- setNames(object = letters, nm = LETTERS)
 #' append(y) <- c("ONE" = 1, "TWO" = 2, "THREE" = 3) # with names provided by `value`
-#' y <- y[1:(length(y) - 3)]
+#' tmp <- 1:(length(y) - 3)
+#' y <- y[tmp] # if I put a () inside of a [], Roxygen doesn't like it
 #' append(y, nm = c("ONE","TWO","THREE")) <- c(1,2,3) # with names specified by `nm`
+#' append(y, after = "Z", nm = "ZERO") <- "0" # using name to provide `after`
+#'
 #' # using overwrite
 #' append(y, overwrite = TRUE) <- c("ONE" = "one","TWO" = "two", "THREE" = "three")
 #' append(y, overwrite = FALSE) <- c("ONE" = "one","TWO" = "two", "THREE" = "three")
+#'
 #' @export
 `append<-` <- function(x, after = length(x), nm = NULL, overwrite = TRUE, value) {
    # the last argument has to be named "value" for *<- functions"
@@ -563,6 +593,8 @@ all_diff <- function(x) {
          if (length(value) == 0) return(x) # when all elements in `value` have the same elements as in `data`
       }
    }
+   if (is.character(after))
+      after <- match(x = after, table = names(x))
    output <- append(x = x, values = value, after = after)
    return(output)
 }
@@ -1840,7 +1872,7 @@ stack2 <- function(data, select.nm, keep.nm = pick(x = names(data), val = select
 
    # keep columns
    n_select <- length(select.nm)
-   if (!(is.null(keep.nm))) {
+   if (length(keep.nm) > 0) { # works for not NULL or not character vector of length 0
       tmp_keep <- replicate(n = n_select, expr = data[, keep.nm, drop = FALSE],
          simplify = FALSE)
       keep_dfm <- do.call(what = `rbind.data.frame`, args = tmp_keep) # rbind.data.frame
@@ -1957,7 +1989,7 @@ stack2 <- function(data, select.nm, keep.nm = pick(x = names(data), val = select
 #' row_keep <- sample(1:nrow(stacked), size = nrow(stacked) / 2)
 #' stacked_rm <- stacked[row_keep, ]
 #' unstack2(data = stacked_rm, rownames.nm = "row_names", vrbnames.nm = "vrb_names", el.nm = "el")
-#' \dontrun{
+#' \dontrun{ # error when `add.missing` = FALSE
 #'    unstack2(data = stacked_rm, rownames.nm = "row_names", vrbnames.nm = "vrb_names",
 #'       el.nm = "el", add.missing = FALSE)
 #' }
@@ -2534,7 +2566,7 @@ fct2v <- function(fct, simplify = TRUE, codes = FALSE, check = TRUE) {
 #'
 #' @param fct factor.
 #'
-#' @return integer vector with length = \code{length(levels(fct)}, elements = integer
+#' @return integer vector with length = \code{length(levels(fct))}, elements = integer
 #' codes of \code{fct} and names = \code{levels(fct)}.
 #'
 #' @examples
@@ -3745,34 +3777,47 @@ lv2v <- function(lv, use.listnames = TRUE, use.vecnames = TRUE, sep = "_", check
 #' double > integer > logical).
 #'
 #' @examples
+#'
 #' # 1) `lv` has names; vectors have names
 #' lv <- setNames(object = lapply(X = letters, FUN = setNames, nm = "alphabet"), nm = LETTERS)
 #' lv2m(lv, along = 1)
 #' lv2m(lv, along = 2)
+#'
 #' # 2) `lv` has names; no vector names
 #' lv <- setNames(object = as.list(letters), nm = LETTERS)
 #' lv2m(lv, along = 1)
 #' lv2m(lv, along = 2)
+#'
 #' # 3) no `lv` names; vector have names
 #' lv <- lapply(X = letters, FUN = setNames, nm = "alphabet")
 #' lv2m(lv, along = 1)
 #' lv2m(lv, along = 2)
+#'
 #' # 4) no `lv` names; no vector names
 #' lv <- as.list.default(letters)
 #' lv2m(lv, along = 1)
 #' lv2m(lv, along = 2)
+#'
 #' # actual use case (sort of)
 #' lv <- lapply(X = asplit(x = as.matrix(attitude), MARGIN = 1),
 #'    FUN = undim) # need undim since asplit returns 1D arrays
 #' cbind(lv) # not what we want
 #' do.call(what = cbind, args = lv) # doesn't have useful dimnames
 #' lv2m(lv, along = 2) # finally what we want
+#'
 #' # when vectors have named elements in different positions
 #' lv <- list("row_1" = c("col_A" = "col_A1", "col_B" = "col_B1", "col_C" = "col_C1"),
 #'    "row_2" = c("col_B" = "col_B2", "col_C" = "col_C2", "col_A" = "col_A2"),
 #'    "row_3" = c("col_C" = "col_C3", "col_A" = "col_A3", "col_B" = "col_B3"))
 #' lv2m(lv, along = 1, fill = FALSE) # probably not what you want
 #' lv2m(lv, along = 1, fill = TRUE) # what you want (See details)
+#'
+#' # when you have a list with only one vector
+#' lv <- list("A" = c("one" = 1, "two" = 2, "three" = 3))
+#' x <- lv2m(lv, along = 1, fill = FALSE)
+#' y <- lv2m(lv, along = 1, fill = TRUE)
+#' identical(x, y)
+#'
 #' @export
 lv2m <- function(lv, along, fill = FALSE, check = TRUE) {
 
@@ -3786,7 +3831,7 @@ lv2m <- function(lv, along, fill = FALSE, check = TRUE) {
    }
    if (!fill) {
       if (check) {
-         if (var(lengths(lv) != 0))
+         if (!(all_same(lengths(lv))))
             stop("if `fill` = FALSE, all elements of `lv` must have the same length")
       }
       if (along == 1L) {
@@ -3879,29 +3924,35 @@ lv2m <- function(lv, along, fill = FALSE, check = TRUE) {
 #' determined along the names of `lv` and `lv`[[1]].
 #'
 #' @examples
+#'
 #' # 1) `lv` has names; vectors have names
 #' lv <- setNames(object = lapply(X = letters, FUN = setNames, nm = "alphabet"), nm = LETTERS)
 #' lv2d(lv, along = 1)
 #' lv2d(lv, along = 2)
 #' lv2d(lv, along = 2, stringsAsFactors = TRUE)
+#'
 #' # 2) `lv` has names; no vector names
 #' lv <- setNames(object = as.list(letters), nm = LETTERS)
 #' lv2d(lv, along = 1)
 #' lv2d(lv, along = 2)
+#'
 #' # 3) no `lv` names; vector have names
 #' lv <- lapply(X = letters, FUN = setNames, nm = "alphabet")
 #' lv2d(lv, along = 1)
 #' lv2d(lv, along = 2)
+#'
 #' # 4) no `lv` names; no vector names
 #' lv <- as.list.default(letters)
 #' lv2d(lv, along = 1)
 #' lv2d(lv, along = 2)
+#'
 #' # we want vectors combined along rows
 #' lv <- lapply(X = unclass(mtcars), FUN = `names<-`, value = row.names(mtcars))
 #' rbind(lv) # not what we want (array list)
 #' rbind.data.frame(lv) # also not what we want (combined along cols)
 #' do.call(what = rbind.data.frame, args = lv) # doesn't have useful dimnames
 #' lv2d(lv, along = 1) # finally what we want
+#'
 #' # fill = TRUE
 #' tmp <- lapply(X = unclass(mtcars), FUN = `names<-`, value = row.names(mtcars))
 #' lv <- lapply(X = tmp, FUN = function(v) v[-(sample(x = seq_along(v), size = 9))])
@@ -3909,16 +3960,25 @@ lv2m <- function(lv, along, fill = FALSE, check = TRUE) {
 #' tmp <- lapply(X = unclass(as.data.frame(t(mtcars))), FUN = `names<-`, value = names(mtcars))
 #' lv <- lapply(X = tmp, FUN = function(v) v[-(sample(x = seq_along(v), size = 3))])
 #' lv2d(lv, along = 2L, fill = TRUE) # NA for missing values in any given column
+#'
 #' # actual use case
 #' lv <- lapply(X = sn(1:30), FUN = function(i)
 #'    coef(lm(v2frm(names(attitude)), data = attitude[-i, ])))
 #' lv2d(lv, along = 2) # coefs in a data.frame
+#'
 #' # when vectors have named elements in different positions use fill = TRUE
 #' lv <- list("row_1" = c("col_A" = "col_A1", "col_B" = "col_B1", "col_C" = "col_C1"),
 #' "row_2" = c("col_B" = "col_B2", "col_C" = "col_C2", "col_A" = "col_A2"),
 #' "row_3" = c("col_C" = "col_C3", "col_A" = "col_A3", "col_B" = "col_B3"))
 #' lv2d(lv, along = 1, fill = FALSE) # probably not what you want (See details)
 #' lv2d(lv, along = 1, fill = TRUE) # what we want
+#'
+#' # when you have a list with only one vector
+#' lv <- list("A" = c("one" = 1, "two" = 2, "three" = 3))
+#' x <- lv2m(lv, along = 1, fill = FALSE)
+#' y <- lv2m(lv, along = 1, fill = TRUE)
+#' identical(x, y)
+#'
 #' @export
 lv2d <- function(lv, along, fill = FALSE, risky = FALSE, stringsAsFactors = FALSE,
    check = TRUE) {
@@ -3935,7 +3995,7 @@ lv2d <- function(lv, along, fill = FALSE, risky = FALSE, stringsAsFactors = FALS
    }
    if (!fill) {
       if (check) {
-         if (var(lengths(lv) != 0))
+         if (!(all_same(lengths(lv))))
             stop("if `fill` = FALSE, all elements of `lv` must have the same length")
       }
       if (risky && along == 2) {

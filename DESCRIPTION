@@ -1,7 +1,7 @@
 Package: str2str
 Type: Package
 Title: Convert R Objects from One Structure to Another
-Version: 0.2.0
+Version: 0.2.1
 Authors@R: person("David", "Disabato", email = "ddisab01@gmail.com",
     role = c("aut","cre"))
 Description: Offers a suite of functions for converting to and from
@@ -17,8 +17,8 @@ License: GPL (>= 2)
 Encoding: UTF-8
 RoxygenNote: 7.1.1
 NeedsCompilation: no
-Packaged: 2021-06-27 23:08:18 UTC; ddisa
+Packaged: 2021-08-25 00:42:37 UTC; ddisa
 Author: David Disabato [aut, cre]
 Maintainer: David Disabato <ddisab01@gmail.com>
 Repository: CRAN
-Date/Publication: 2021-06-28 04:20:02 UTC
+Date/Publication: 2021-09-05 04:30:02 UTC

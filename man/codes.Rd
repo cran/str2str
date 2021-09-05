@@ -10,7 +10,7 @@ codes(fct)
 \item{fct}{factor.}
 }
 \value{
-integer vector with length = \code{length(levels(fct)}, elements = integer
+integer vector with length = \code{length(levels(fct))}, elements = integer
 codes of \code{fct} and names = \code{levels(fct)}.
 }
 \description{

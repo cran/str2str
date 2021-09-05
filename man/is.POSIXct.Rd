@@ -21,6 +21,6 @@ tmp <- as.POSIXlt("2021-05-24 21:49:11", tz = "America/New_York",
 time <- as.POSIXct(tmp) # as.POSIXct.POSIXlt
 is.POSIXct(time)
 class(time) <- append(class(time), "extra_class")
-is.POSIXct(time) # classes other than Date are allowed
+is.POSIXct(time) # classes other than POSIXct are allowed
 is.POSIXct(list(time)) # returns FALSE
 }

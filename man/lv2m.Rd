@@ -58,32 +58,45 @@ then fill = FALSE should be used. If the user wants to bind by names rather than
 position, then fill = TRUE should be used.
 }
 \examples{
+
 # 1) `lv` has names; vectors have names
 lv <- setNames(object = lapply(X = letters, FUN = setNames, nm = "alphabet"), nm = LETTERS)
 lv2m(lv, along = 1)
 lv2m(lv, along = 2)
+
 # 2) `lv` has names; no vector names
 lv <- setNames(object = as.list(letters), nm = LETTERS)
 lv2m(lv, along = 1)
 lv2m(lv, along = 2)
+
 # 3) no `lv` names; vector have names
 lv <- lapply(X = letters, FUN = setNames, nm = "alphabet")
 lv2m(lv, along = 1)
 lv2m(lv, along = 2)
+
 # 4) no `lv` names; no vector names
 lv <- as.list.default(letters)
 lv2m(lv, along = 1)
 lv2m(lv, along = 2)
+
 # actual use case (sort of)
 lv <- lapply(X = asplit(x = as.matrix(attitude), MARGIN = 1),
    FUN = undim) # need undim since asplit returns 1D arrays
 cbind(lv) # not what we want
 do.call(what = cbind, args = lv) # doesn't have useful dimnames
 lv2m(lv, along = 2) # finally what we want
+
 # when vectors have named elements in different positions
 lv <- list("row_1" = c("col_A" = "col_A1", "col_B" = "col_B1", "col_C" = "col_C1"),
    "row_2" = c("col_B" = "col_B2", "col_C" = "col_C2", "col_A" = "col_A2"),
    "row_3" = c("col_C" = "col_C3", "col_A" = "col_A3", "col_B" = "col_B3"))
 lv2m(lv, along = 1, fill = FALSE) # probably not what you want
 lv2m(lv, along = 1, fill = TRUE) # what you want (See details)
+
+# when you have a list with only one vector
+lv <- list("A" = c("one" = 1, "two" = 2, "three" = 3))
+x <- lv2m(lv, along = 1, fill = FALSE)
+y <- lv2m(lv, along = 1, fill = TRUE)
+identical(x, y)
+
 }

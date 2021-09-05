@@ -54,15 +54,23 @@ for R programming use when computational efficiency is valued; it was created
 for R interactive use when user convenience is valued.
 }
 \examples{
+
+# no names
 x <- letters
 append(x) <- LETTERS
-append(x, after = match(x = "z", table = x)) <- "case_switch" # with the position
+append(x, after = match("z", table = x)) <- "case_switch" # with the position
    # of the added value specified
+
+# ya names
 y <- setNames(object = letters, nm = LETTERS)
 append(y) <- c("ONE" = 1, "TWO" = 2, "THREE" = 3) # with names provided by `value`
-y <- y[1:(length(y) - 3)]
+tmp <- 1:(length(y) - 3)
+y <- y[tmp] # if I put a () inside of a [], Roxygen doesn't like it
 append(y, nm = c("ONE","TWO","THREE")) <- c(1,2,3) # with names specified by `nm`
+append(y, after = "Z", nm = "ZERO") <- "0" # using name to provide `after`
+
 # using overwrite
 append(y, overwrite = TRUE) <- c("ONE" = "one","TWO" = "two", "THREE" = "three")
 append(y, overwrite = FALSE) <- c("ONE" = "one","TWO" = "two", "THREE" = "three")
+
 }

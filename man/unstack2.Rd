@@ -95,7 +95,7 @@ head(x); head(y); head(z)
 row_keep <- sample(1:nrow(stacked), size = nrow(stacked) / 2)
 stacked_rm <- stacked[row_keep, ]
 unstack2(data = stacked_rm, rownames.nm = "row_names", vrbnames.nm = "vrb_names", el.nm = "el")
-\dontrun{
+\dontrun{ # error when `add.missing` = FALSE
    unstack2(data = stacked_rm, rownames.nm = "row_names", vrbnames.nm = "vrb_names",
       el.nm = "el", add.missing = FALSE)
 }

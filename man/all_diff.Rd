@@ -26,4 +26,5 @@ The machine precision of \code{all_diff} for numeric vectors is the same as
 all_diff(1:10)
 all_diff(c(1:10, 10))
 all_diff(c(1.0000000, 1.0000001, 0.9999999)) # machine precision good for most cases
+all_diff(1) # works for vectors of length 1
 }

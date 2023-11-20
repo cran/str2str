@@ -2,14 +2,7 @@
 % Please edit documentation in R/str2str_functions.R
 \name{rbind<-}
 \alias{rbind<-}
-\title{Add Rows to Data Objects
-\code{`rbind<-`} adds rows to data objects as a side effect. The purpose of
-the function is to replace the need to use dat2 <- rbind(dat1, add1);
-dat3 <- rbind(dat2, add2); dat4 <- rbind(dat3, add3), etc. For data.frames,
-it functions similarly to \code{`[<-.data.frame`}, but allows you to specify the
-location of the rows similar to \code{append} (vs. \code{c}) and overwrite
-rows with the same rownames. For matrices, it offers more novel functionality
-since \code{`[<-.matrix`} does not exist.}
+\title{Add Rows to Data Objects}
 \usage{
 rbind(data, after = nrow(data), row.nm = NULL, overwrite = TRUE) <- value
 }
@@ -44,6 +37,15 @@ and no side effects, then it can be called like a traditional function:
 dat2 <- `rbind<-`(dat1, value = add1).
 }
 \description{
+\code{`rbind<-`} adds rows to data objects as a side effect. The purpose of
+the function is to replace the need to use dat2 <- rbind(dat1, add1);
+dat3 <- rbind(dat2, add2); dat4 <- rbind(dat3, add3), etc. For data.frames,
+it functions similarly to \code{`[<-.data.frame`}, but allows you to specify the
+location of the rows similar to \code{append} (vs. \code{c}) and overwrite
+rows with the same rownames. For matrices, it offers more novel functionality
+since \code{`[<-.matrix`} does not exist.
+}
+\details{
 Some traditional R folks may find this function uncomfortable. R is famous for limiting
 side effects, except for a few notable exceptions (e.g., \code{`[<-`} and \code{`names<-`}).
 Part of the reason is that side effects can be computationally inefficient in R.
@@ -53,8 +55,7 @@ rbind(dat) <- add2; rbind(dat) <- add3 is dat1 <- do.call(what = rbind,
 args = list(dat, add1, add2, add3)). However, \code{`rbind<-`} was not created
 for R programming use when computational efficiency is valued; it is created
 for R interactive use when user convenience is valued.
-}
-\details{
+
 Similar to \code{`rbind`}, \code{`rbind<-`} works with both data.frames and matrices.
 This is because \code{`rbind`} is a generic function with a default method that
 works with matrices and a data.frame method that works with data.frames. Similar

@@ -2,10 +2,7 @@
 % Please edit documentation in R/str2str_functions.R
 \name{sn}
 \alias{sn}
-\title{Set a Vector's Names as its Elements
-\code{sn} sets a vector's names as its elements. It is a simple utility function
-equal to \code{setNames(x, nm = as.character(x))}. This is particularly useful
-when using \code{lapply} and you want the return object to have \code{X} as its names.}
+\title{Set a Vector's Names as its Elements}
 \usage{
 sn(x)
 }
@@ -16,7 +13,6 @@ sn(x)
 \code{x} with the elements of \code{x} as its names.
 }
 \description{
-Set a Vector's Names as its Elements
 \code{sn} sets a vector's names as its elements. It is a simple utility function
 equal to \code{setNames(x, nm = as.character(x))}. This is particularly useful
 when using \code{lapply} and you want the return object to have \code{X} as its names.

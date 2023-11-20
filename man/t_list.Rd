@@ -28,6 +28,7 @@ done based on positions. If all element within \code{x} have the same names,
 then the transposition is done based on those names.
 }
 \examples{
+
 # modeling example
 iris_bySpecies <- split(x = iris, f = iris$"Species")
 lmObj_bySpecies <- lapply(X = iris_bySpecies, FUN = function(dat) {
@@ -35,6 +36,7 @@ lmObj_bySpecies <- lapply(X = iris_bySpecies, FUN = function(dat) {
 lmEl_bySpecies <- t_list(lmObj_bySpecies)
 summary(lmObj_bySpecies); summary(lmEl_bySpecies)
 summary.default(lmEl_bySpecies[[1]]); summary.default(lmEl_bySpecies[[2]])
+
 # no names
 lmObj_bySpecies2 <- unname(lapply(X = lmObj_bySpecies, FUN = unname))
 lmEl_bySpecies2 <- t_list(lmObj_bySpecies2)
@@ -43,15 +45,22 @@ summary.default(lmEl_bySpecies2[[1]]); summary.default(lmEl_bySpecies2[[2]])
 all(unlist(Map(name = lmEl_bySpecies, nameless = lmEl_bySpecies2,
    f = function(name, nameless) all.equal(unname(name), nameless)))) # is everything
    # but the names the same?
+
 # atomic vector example
 x <- list("A" = c("a"=1,"b"=2,"c"=3),"B" = c("a"=1,"b"=2,"c"=3),
    "C" = c("a"=1,"b"=2,"c"=3))
 t_list(x, rtn.atomic = TRUE)
+
 # names in different positions
 x <- list("A" = c("a"=1,"b"=2,"c"=3),"B" = c("b"=2,"a"=1,"c"=3),
    "C" = c("c"=3,"b"=2,"a"=1))
 t_list(x, rtn.atomic = TRUE)
+
 # no names
 x <- list(c(1,2,3), c(1,2,3), c(1,2,3))
 t_list(x, rtn.atomic = TRUE)
+
+# lists with a single element
+x <- list("A" = c("a"=1,"b"=2,"c"=3))
+t_list(lmObj_bySpecies[1])
 }

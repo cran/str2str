@@ -1,7 +1,7 @@
 Package: str2str
 Type: Package
 Title: Convert R Objects from One Structure to Another
-Version: 0.2.1
+Version: 1.0.0
 Authors@R: person("David", "Disabato", email = "ddisab01@gmail.com",
     role = c("aut","cre"))
 Description: Offers a suite of functions for converting to and from
@@ -15,10 +15,10 @@ Depends: R (>= 4.0.0), datasets, stats, utils, methods
 Imports: abind, checkmate, plyr, reshape
 License: GPL (>= 2)
 Encoding: UTF-8
-RoxygenNote: 7.1.1
+RoxygenNote: 7.2.3
 NeedsCompilation: no
-Packaged: 2021-08-25 00:42:37 UTC; ddisa
+Packaged: 2023-11-20 21:24:07 UTC; David Disabato
 Author: David Disabato [aut, cre]
 Maintainer: David Disabato <ddisab01@gmail.com>
 Repository: CRAN
-Date/Publication: 2021-09-05 04:30:02 UTC
+Date/Publication: 2023-11-20 21:50:02 UTC

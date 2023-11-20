@@ -4,13 +4,22 @@
 \alias{is.avector}
 \title{Test for an Atomic Vector}
 \usage{
-is.avector(x)
+is.avector(x, attr.ok = TRUE, fct.ok = TRUE)
 }
 \arguments{
-\item{x}{= object whose structure is desired to be tested.}
+\item{x}{object whose structure is desired to be tested.}
+
+\item{attr.ok}{logical vector with length 1 specifying whether non-core attributes
+are allowed in \code{x}. Core attributes are 1) "names", 2) "dim", 3) "dimnames",
+4) "levels", and 5) "class". Therefore, \code{attr.ok} refers to attributes *other*
+than these 5.}
+
+\item{fct.ok}{logical vector with length 1 specifying whether factors are allowed.}
 }
 \value{
-logical vector with length 1 specifying whether `x` is an atomic vector.
+logical vector with length 1 specifying whether \code{x} is an atomic vector.
+If \code{attr.ok} is TRUE then non-core attributes are allowed (e.g., "value.labels").
+If \code{fct.ok} is TRUE then factors are allowed.
 }
 \description{
 \code{is.avector} returns whether an object is an atomic vector with typeof
@@ -20,7 +29,23 @@ character, logical, integer, or double.
 \code{is.avector} is simply a logical "and" of \code{is.atomic} and \code{is.vector}.
 }
 \examples{
+
+# normal use
 is.avector(x = c(1,2,3))
+is.avector(x = c("one" = 1, "two" = 2, "three" = 3)) # names are always okay
 is.avector(x = array(c(1,2,3))) # returns false for arrays
 is.avector(x = list(1,2,3)) # returns false for lists
+
+# non-core attributes
+x <- structure(.Data = c(1,2,3), "names" = c("one","two","three"),
+   "value.labels" = c("woman","man","non-binary"))
+attributes(x)
+is.avector(x)
+is.avector(x, attr.ok = FALSE)
+
+# factors
+x <- factor(c(1,2,3), labels = c("one","two","three"))
+is.avector(x)
+is.avector(x, fct.ok = FALSE)
+
 }

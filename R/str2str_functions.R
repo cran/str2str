@@ -53,10 +53,7 @@
 #'
 #' @import datasets stats utils methods
 #'
-#' @docType package
-#'
-#' @name str2str
-NULL
+"_PACKAGE"
 
 # IS.OBJECT ####
 
@@ -144,18 +141,58 @@ is.cnumeric <- function(x, warn = FALSE) {
 #' character, logical, integer, or double.
 #'
 #' \code{is.avector} is simply a logical "and" of \code{is.atomic} and \code{is.vector}.
-
-#' @param x = object whose structure is desired to be tested.
 #'
-#' @return logical vector with length 1 specifying whether `x` is an atomic vector.
+#' @param x object whose structure is desired to be tested.
+#'
+#' @param attr.ok logical vector with length 1 specifying whether non-core attributes
+#' are allowed in \code{x}. Core attributes are 1) "names", 2) "dim", 3) "dimnames",
+#' 4) "levels", and 5) "class". Therefore, \code{attr.ok} refers to attributes *other*
+#' than these 5.
+#'
+#' @param fct.ok logical vector with length 1 specifying whether factors are allowed.
+#'
+#' @return logical vector with length 1 specifying whether \code{x} is an atomic vector.
+#' If \code{attr.ok} is TRUE then non-core attributes are allowed (e.g., "value.labels").
+#' If \code{fct.ok} is TRUE then factors are allowed.
 #'
 #' @examples
+#'
+#' # normal use
 #' is.avector(x = c(1,2,3))
+#' is.avector(x = c("one" = 1, "two" = 2, "three" = 3)) # names are always okay
 #' is.avector(x = array(c(1,2,3))) # returns false for arrays
 #' is.avector(x = list(1,2,3)) # returns false for lists
+#'
+#' # non-core attributes
+#' x <- structure(.Data = c(1,2,3), "names" = c("one","two","three"),
+#'    "value.labels" = c("woman","man","non-binary"))
+#' attributes(x)
+#' is.avector(x)
+#' is.avector(x, attr.ok = FALSE)
+#'
+#' # factors
+#' x <- factor(c(1,2,3), labels = c("one","two","three"))
+#' is.avector(x)
+#' is.avector(x, fct.ok = FALSE)
+#'
 #' @export
-is.avector <- function(x) {
-   is.atomic(x) && is.vector(x)
+is.avector <- function(x, attr.ok = TRUE, fct.ok = TRUE) {
+
+   if(attr.ok) {
+      x_attr <- attributes(x)
+      if (!(is.null(x_attr))) {
+         nm_attr <- names(x_attr)
+         novector_nm_attr <- c("names","dim","dimnames","levels","class") # "names" are okay for is.vector()
+         ignore_nm_attr <- str2str::pick(nm_attr,
+            val = novector_nm_attr, not = TRUE)
+         if (length(ignore_nm_attr) > 0) {
+            attr(x, which = ignore_nm_attr) <- NULL
+         }
+      }
+   }
+   if (fct.ok && is.factor(x)) x <- str2str::fct2v(x)
+   rtn <- is.atomic(x) && is.vector(x)
+   return(rtn)
 }
 
 # is.names #
@@ -424,6 +461,53 @@ is.POSIXlt <- function(x) {
    is(object = x, class2 = "POSIXlt") # help(is) says is() is a little faster than inherits()
 }
 
+# is.dummy #
+
+#' Test for a Dummy Variable
+#'
+#' \code{is.dummy} returns whether a numeric vector is a dummy variable, meaning
+#' all elements one of two observed values (or missing values). Depending on the argument
+#' \code{any.values}, the two observed values are required to be 0 and 1 or any values.
+#'
+#' @param x atomic vector.
+#'
+#' @param any.values logical vector of length 1 specifying whether the two observed values
+#' need to be 0 or 1 (FALSE) or can be any values (TRUE).
+#'
+#' @return TRUE if `x` is a dummy variable; FALSE otherwise.
+#'
+#' @examples
+#'
+#' # any.values = FALSE (default)
+#' is.dummy(mtcars$"am") # TRUE
+#' is.dummy(c(mtcars$"am", NA, NaN)) # works with missing values
+#' is.dummy(c(as.integer(mtcars$"am"), NA, NaN)) # works with typeof integer
+#' x <- ifelse(mtcars$"am" == 1, yes = 2, no = 1)
+#' is.dummy(x) # FALSE
+#'
+#' # any.values = TRUE
+#' is.dummy(x, any.values = TRUE) # TRUE
+#' is.dummy(c(x, NA), any.values = TRUE) # work with missing values
+#' is.dummy(c(as.character(x), NA), any.values = TRUE) # work with typeof character
+#' is.dummy(mtcars$"gear") # FALSE for nominal variables with more than 2 levels
+#'
+#' @export
+is.dummy <- function(x, any.values = FALSE) {
+   x_unique <- unique(na.omit(x))
+   if (any.values) {
+      if (2 == length(x_unique))
+         return(TRUE)
+      else
+         return(FALSE)
+   } else {
+      set_diff <- setdiff(x_unique, y = c(0, 1))
+      if (0 == length(set_diff))
+         return(TRUE)
+      else
+         return(FALSE)
+   }
+}
+
 # all_same #
 
 #' Test if All Elements are the Same
@@ -444,6 +528,7 @@ is.POSIXlt <- function(x) {
 #' all_same(rep.int("a", times = 10))
 #' all_same(rep.int(1, times = 10))
 #' all_same(c(1.0000000, 1.0000001, 0.9999999)) # machine precision good for most cases
+#' all_same(1) # works for vectors of length 1
 #' @export
 all_same <- function(x) {
    1L == length(unique(x))
@@ -469,6 +554,7 @@ all_same <- function(x) {
 #' all_diff(1:10)
 #' all_diff(c(1:10, 10))
 #' all_diff(c(1.0000000, 1.0000001, 0.9999999)) # machine precision good for most cases
+#' all_diff(1) # works for vectors of length 1
 #' @export
 all_diff <- function(x) {
    length(x) == length(unique(x))
@@ -708,7 +794,7 @@ all_diff <- function(x) {
 # `rbind<-` #
 
 #' Add Rows to Data Objects
-
+#'
 #' \code{`rbind<-`} adds rows to data objects as a side effect. The purpose of
 #' the function is to replace the need to use dat2 <- rbind(dat1, add1);
 #' dat3 <- rbind(dat2, add2); dat4 <- rbind(dat3, add3), etc. For data.frames,
@@ -1120,6 +1206,34 @@ nlay <- function(x) {
    dim(x)[3L]
 }
 
+# laynames #
+
+#' Names of the Layers (the Third Dimension)
+#'
+#' \code{laynames} returns the names of the layers - the third dimension - of an array.
+#' If the object does not have a third dimension (e.g., matrix), then the function
+#' will return NULL. If the object does not have any dimensions
+#' (e.g., atomic vector), then the function will also return NULL.
+#'
+#' R does not have standard terminology for the third dimension. There are several common terms
+#' people use including "height" and "page". I personally prefer "layer" as it makes sense
+#' whether the user visualizes the third dimension as going into/ontop a desk or into/ontop a wall.
+#'
+#' @param x array.
+#'
+#' @return Names of the layers (the third dimension) of \code{x}. The structure is
+#' a character vector with length = \code{nlay(x)}. See details for special cases.
+#'
+#' @examples
+#' laynames(HairEyeColor)
+#' a <- array(data = NA, dim = c(6,7,8,9))
+#' laynames(a)
+#' laynames(c(1,2,3))
+#' @export
+laynames <- function(x) {
+   dimnames(x)[[3L]]
+}
+
 # ndim #
 
 #' Number of Object Dimensions
@@ -1379,7 +1493,7 @@ cat0 <- function(..., n.before = 1L, n.after = 1L, file = "", fill = FALSE,
 # sn #
 
 #' Set a Vector's Names as its Elements
-
+#'
 #' \code{sn} sets a vector's names as its elements. It is a simple utility function
 #' equal to \code{setNames(x, nm = as.character(x))}. This is particularly useful
 #' when using \code{lapply} and you want the return object to have \code{X} as its names.
@@ -1621,6 +1735,7 @@ grab <- function(x, envir = sys.frame()) {
 #' of the returned object has a subelement for each element in \code{x}.
 #'
 #' @examples
+#'
 #' # modeling example
 #' iris_bySpecies <- split(x = iris, f = iris$"Species")
 #' lmObj_bySpecies <- lapply(X = iris_bySpecies, FUN = function(dat) {
@@ -1628,6 +1743,7 @@ grab <- function(x, envir = sys.frame()) {
 #' lmEl_bySpecies <- t_list(lmObj_bySpecies)
 #' summary(lmObj_bySpecies); summary(lmEl_bySpecies)
 #' summary.default(lmEl_bySpecies[[1]]); summary.default(lmEl_bySpecies[[2]])
+#'
 #' # no names
 #' lmObj_bySpecies2 <- unname(lapply(X = lmObj_bySpecies, FUN = unname))
 #' lmEl_bySpecies2 <- t_list(lmObj_bySpecies2)
@@ -1636,24 +1752,31 @@ grab <- function(x, envir = sys.frame()) {
 #' all(unlist(Map(name = lmEl_bySpecies, nameless = lmEl_bySpecies2,
 #'    f = function(name, nameless) all.equal(unname(name), nameless)))) # is everything
 #'    # but the names the same?
+#'
 #' # atomic vector example
 #' x <- list("A" = c("a"=1,"b"=2,"c"=3),"B" = c("a"=1,"b"=2,"c"=3),
 #'    "C" = c("a"=1,"b"=2,"c"=3))
 #' t_list(x, rtn.atomic = TRUE)
+#'
 #' # names in different positions
 #' x <- list("A" = c("a"=1,"b"=2,"c"=3),"B" = c("b"=2,"a"=1,"c"=3),
 #'    "C" = c("c"=3,"b"=2,"a"=1))
 #' t_list(x, rtn.atomic = TRUE)
+#'
 #' # no names
 #' x <- list(c(1,2,3), c(1,2,3), c(1,2,3))
 #' t_list(x, rtn.atomic = TRUE)
+#'
+#' # lists with a single element
+#' x <- list("A" = c("a"=1,"b"=2,"c"=3))
+#' t_list(lmObj_bySpecies[1])
 #' @export
 t_list <- function(x, rtn.atomic = FALSE) {
 
    # checks
    if (!(is.list(x))) stop("`x` must be a list")
    len_byel <- unlist(lapply(X = x, FUN = length))
-   if (0 != var(len_byel))
+   if (!(all_same(len_byel)))
       stop("each element of `x` must have the same length")
    nm_sort <- lapply(X = x, FUN = function(obj) sort(names(obj))) # sort so the names in the same order
    if (any(unlist(lapply(X = nm_sort, FUN = is.null))))
@@ -2055,11 +2178,12 @@ unstack2 <- function(data, rownames.nm = "row_names", vrbnames.nm = "vrb_names",
 #' merging different data.frames in \code{data.list} by different columns.
 #'
 #' @param type character vector of length 1 specifying the type of merge. Options
-#' are the following: 1. "full" = all rows from any of the data.frames in \code{data.list},
-#' 2. "left" = only rows from the first data.frame in \code{data.list}: \code{data.list[[1L]]}),
-#' 3. "right" = only rows from the last data.frame in \code{data.list}:
-#' \code{data.list[[length(data.list)]]}, 4. "inner" = only rows present in each
-#' and every of the data.frames in \code{data.list}. See \code{\link[plyr]{join}}.
+#' are the following: 1. "full" = all rows from any of the data.frames in
+#' \code{data.list}, 2. "left" = only rows from the first data.frame in
+#' \code{data.list}: \code{data.list[[1L]]}), 3. "right" = only rows from the last
+#' data.frame in \code{data.list}: \code{data.list[[length(data.list)]]},
+#' 4. "inner" = only rows present in each and every of the data.frames in
+#' \code{data.list}. See \code{\link[plyr]{join}}.
 #'
 #' @param match character vector of length 1 specifying whether merged elements should
 #' be repeated in each row of the return object when duplicate values exist on the
@@ -2078,7 +2202,7 @@ unstack2 <- function(data, rownames.nm = "row_names", vrbnames.nm = "vrb_names",
 #' used if \code{rownamesAsColumn} = TRUE.
 #'
 #' @return data.frame of all uniquely colnamed columns from \code{data.list} with
-#' the rows included specified by \code{type} and rownames specified by \code{keep.row.nm}.
+#' the rows included specified by \code{type} and rownames specified by \code{rownamesAsColumn}.
 #' Similar to \code{plyr::join}, \code{Join} returns the rows in the same order as
 #' they appeared in \code{data.list}.
 #'
@@ -4053,7 +4177,7 @@ lv2d <- function(lv, along, fill = FALSE, risky = FALSE, stringsAsFactors = FALS
 #' \code{v} should be retained in the return object.
 #'
 #' @param n.break integer vector of length 1 specifying how \code{v} should be broken
-#' up. Every {n.break} elements while seq_along \code{v}, a new element of the list
+#' up. Every \code{n.break} elements while seq_along \code{v}, a new element of the list
 #' is created and subsequent elements of \code{v} are stored there. If \code{n.break}
 #' is not a multiple of \code{length(v)}, then NAs are appended to the end of \code{v}
 #' to ensure that each list element has (atomic) vectors of the same length. Note, the
@@ -4835,6 +4959,80 @@ ld2a <- function(ld, dim.order = c(1, 2, 3), dimlab.list = NULL, fct = "chr",
 }
 
 # 2LD ####
+
+# d2ld #
+
+#' Data-Frame to List of Data-Frames
+#'
+#' \code{d2ld} converts a data.frame to a list of data.frames. This is a simple call
+#' to \code{split.data.frame} splitting the data.frame up by groups.
+#'
+#' @param d data.frame.
+#'
+#' @param by character vector of colnames specifying the groups to split the data.frame
+#' up by. Can be multiple colnames, which implicitly calls \code{interaction}.
+#'
+#' @param keep.by logical vector of length 1 specifying whether the by columns should
+#' be kept in the list of data.frames (TRUE) or removed (FALSE).
+#'
+#' @param drop logical vector of length 1 specifying whether unused groups
+#' from the \code{by} columns should be dropped (TRUE) or kept (FALSE). This only applies
+#' when there are multiple \code{by} columns. \code{drop} = FALSE can then result in some
+#' data.frames with \code{nrow} = 0. See \code{interaction} for details.
+#'
+#' @param sep character vector of length 1 specifying the string used to separate
+#' the group names. Only applicable with multiple \code{by} columns. See
+#' \code{interaction} for details.
+#'
+#' @param lex.order logical vector of length 1 specifying the order of the data.frames
+#' in the list based on the groups in the \code{by} columns. This only applies
+#' when there are multiple \code{by} columns. See \code{interaction} for details.
+#'
+#' @param check logical vector of length 1 specifying whether to check the structure
+#' of the input arguments. For example, check whether \code{d} is a data.frame and
+#' \code{by} are colnames of \code{d}. This argument is available to allow flexibility
+#' in whether the user values informative error messages (TRUE) vs. computational
+#' efficiency (FALSE).
+#'
+#' @return list of data.frames split by the groups specified in the \code{by} columns.
+#' The list names are the group names (with \code{sep} if there are multiple
+#' \code{by} columns).
+#'
+#' @examples
+#'
+#' # one grouping variable
+#' d2ld(d = mtcars, by = "vs")
+#' d2ld(d = mtcars, by = "gear")
+#'
+#' # two grouping variables
+#' d2ld(d = mtcars, by = c("vs","gear"))
+#' d2ld(d = mtcars, by = c("vs","gear"), lex.order = TRUE)
+#'
+#' # keep.by argument
+#' d2ld(d = mtcars, by = "vs", keep.by = FALSE)
+#' d2ld(d = mtcars, by = "gear", keep.by = FALSE)
+#' d2ld(d = mtcars, by = c("vs","gear"), keep.by = FALSE)
+#'
+#' @export
+d2ld <- function(d, by, keep.by = TRUE, drop = FALSE, sep = ".", lex.order = FALSE,
+                 check = TRUE) {
+
+   if (check) {
+      checkmate::assertDataFrame(d)
+      not_colnames <- not.colnames(x = d, nm = by)
+      if (length(not_colnames) > 0)
+         stop("the following `by` are not colnames in `d`: ", not_colnames)
+      checkmate::assertLogical(keep.by, any.missing = FALSE, len = 1L)
+      checkmate::assertLogical(drop, any.missing = FALSE, len = 1L)
+      checkmate::assertCharacter(sep, any.missing = FALSE, len = 1L)
+      checkmate::assertLogical(lex.order, any.missing = FALSE, len = 1L)
+   }
+   f <- d[by]
+   if (!(keep.by))
+      d <- pick(d, val = by, nm = TRUE, not = TRUE)
+   ld <- split.data.frame(x = d, f = f, drop = drop, sep = sep, lex.order = lex.order)
+   return(ld)
+}
 
 # a2ld #
 

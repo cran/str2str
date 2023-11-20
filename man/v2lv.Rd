@@ -13,7 +13,7 @@ v2lv(v, use.names = TRUE, n.break = 1L, warn.break = TRUE, check = TRUE)
 \code{v} should be retained in the return object.}
 
 \item{n.break}{integer vector of length 1 specifying how \code{v} should be broken
-up. Every {n.break} elements while seq_along \code{v}, a new element of the list
+up. Every \code{n.break} elements while seq_along \code{v}, a new element of the list
 is created and subsequent elements of \code{v} are stored there. If \code{n.break}
 is not a multiple of \code{length(v)}, then NAs are appended to the end of \code{v}
 to ensure that each list element has (atomic) vectors of the same length. Note, the

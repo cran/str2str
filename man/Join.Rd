@@ -26,11 +26,12 @@ will be used for merging. This is not recommended as it can result in \code{Join
 merging different data.frames in \code{data.list} by different columns.}
 
 \item{type}{character vector of length 1 specifying the type of merge. Options
-are the following: 1. "full" = all rows from any of the data.frames in \code{data.list},
-2. "left" = only rows from the first data.frame in \code{data.list}: \code{data.list[[1L]]}),
-3. "right" = only rows from the last data.frame in \code{data.list}:
-\code{data.list[[length(data.list)]]}, 4. "inner" = only rows present in each
-and every of the data.frames in \code{data.list}. See \code{\link[plyr]{join}}.}
+are the following: 1. "full" = all rows from any of the data.frames in
+\code{data.list}, 2. "left" = only rows from the first data.frame in
+\code{data.list}: \code{data.list[[1L]]}), 3. "right" = only rows from the last
+data.frame in \code{data.list}: \code{data.list[[length(data.list)]]},
+4. "inner" = only rows present in each and every of the data.frames in
+\code{data.list}. See \code{\link[plyr]{join}}.}
 
 \item{match}{character vector of length 1 specifying whether merged elements should
 be repeated in each row of the return object when duplicate values exist on the
@@ -50,7 +51,7 @@ used if \code{rownamesAsColumn} = TRUE.}
 }
 \value{
 data.frame of all uniquely colnamed columns from \code{data.list} with
-the rows included specified by \code{type} and rownames specified by \code{keep.row.nm}.
+the rows included specified by \code{type} and rownames specified by \code{rownamesAsColumn}.
 Similar to \code{plyr::join}, \code{Join} returns the rows in the same order as
 they appeared in \code{data.list}.
 }

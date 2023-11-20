@@ -26,4 +26,5 @@ The machine precision of \code{all_same} for numeric vectors is the same as
 all_same(rep.int("a", times = 10))
 all_same(rep.int(1, times = 10))
 all_same(c(1.0000000, 1.0000001, 0.9999999)) # machine precision good for most cases
+all_same(1) # works for vectors of length 1
 }
